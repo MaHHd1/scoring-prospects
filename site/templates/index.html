@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ banque }} · Espace conseiller</title>
+<style>
+:root{--bg:#f3f5f9;--card:#fff;--ink:#14213d;--muted:#5d6b85;--line:#dde3ee;--brand:#0b3d6e;--accent:#0f8b8d;--ok:#16794c;--okbg:#e3f5ec;--no:#8a4b00;--nobg:#fdf0dc;--err:#a31d2b;--errbg:#fde8ea}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1522;--card:#17202f;--ink:#e8edf6;--muted:#9aa8c2;--line:#2a3750;--brand:#1c5a96;--accent:#35b3b5;--ok:#6fdca5;--okbg:#12342a;--no:#ffc477;--nobg:#3a2b12;--err:#ff8e99;--errbg:#3b1a1f}}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--brand);color:#fff;padding:18px 28px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+header h1{margin:0;font-size:1.25rem;font-weight:650;letter-spacing:.2px}
+header span{opacity:.8;font-size:.92rem}
+main{max-width:1180px;margin:0 auto;padding:22px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px}
+@media (max-width:860px){main{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px}
+h2{margin:0 0 14px;font-size:1.02rem}
+label{display:block;font-size:.85rem;font-weight:600;margin-bottom:4px}
+.hint{font-size:.76rem;color:var(--muted);font-weight:400;margin-top:3px}
+input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:.95rem}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;margin-top:16px}
+.row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.row>div{flex:1;min-width:220px}
+.check{display:flex;gap:8px;align-items:center;font-weight:500;margin:0;padding:9px 0}
+.check input{width:auto}
+button{background:var(--brand);color:#fff;border:0;border-radius:8px;padding:11px 20px;font-size:.95rem;font-weight:600;cursor:pointer;margin-top:18px}
+button:disabled{opacity:.5;cursor:not-allowed}
+.status{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.status li{display:flex;align-items:center;gap:10px;font-size:.88rem}
+.dot{width:10px;height:10px;border-radius:50%;flex:none;background:var(--err)}
+.dot.on{background:var(--ok)}
+.muted{color:var(--muted);font-size:.85rem}
+.res{border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
+.res h3{margin:0;font-size:.95rem}
+.big{font-size:2.1rem;font-weight:700;margin:6px 0 2px}
+.bar{height:8px;background:var(--line);border-radius:6px;position:relative;margin:8px 0 4px}
+.bar i{display:block;height:100%;border-radius:6px;background:var(--accent)}
+.bar b{position:absolute;top:-4px;width:2px;height:16px;background:var(--ink)}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:.8rem;font-weight:650;margin-top:8px}
+.badge.ok{background:var(--okbg);color:var(--ok)}.badge.no{background:var(--nobg);color:var(--no)}
+.errbox{background:var(--errbg);color:var(--err);border-radius:8px;padding:10px 12px;font-size:.88rem}
+.errbox ul{margin:4px 0 0 18px;padding:0}
+.who{font-size:.74rem;color:var(--muted);font-weight:400}
+footer{max-width:1180px;margin:0 auto;padding:0 22px 28px;font-size:.78rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<header><h1>{{ banque }}</h1><span>Espace conseiller · Scoring de prospects</span></header>
+<main>
+  <section class="card">
+    <h2>Fiche prospect</h2>
+    <div class="row">
+      <div><label for="modele">Modèle</label><select id="modele"></select></div>
+      <label class="check"><input type="checkbox" id="comparer"> Comparer avec tous les modèles</label>
+    </div>
+    <div id="infoModele" class="hint" style="margin-top:8px"></div>
+    <div id="formulaire" class="grid"></div>
+    <button id="calculer" disabled>Calculer le score</button>
+  </section>
+  <section>
+    <div class="card" style="margin-bottom:20px"><h2>Résultat</h2><div id="resultats" class="muted">Remplissez la fiche puis cliquez sur « Calculer le score ».</div></div>
+    <div class="card"><h2>État des API</h2><ul id="etat" class="status"></ul><button id="actualiser" style="margin-top:14px;padding:7px 14px;font-size:.82rem">Actualiser</button></div>
+  </section>
+</main>
+<footer>Le score sert à prioriser des campagnes commerciales, jamais à exclure un client ni à décider d'un crédit. Les modèles du groupe n'utilisent pas tous les mêmes données : lisez la mesure indiquée sous chaque score.</footer>
+<script>
+const $ = id => document.getElementById(id);
+let modeles = [];
+function el(tag, props, ...kids){
+  const n = document.createElement(tag);
+  for (const [k,v] of Object.entries(props||{})) { if (k==='class') n.className=v; else if (k==='text') n.textContent=v; else n.setAttribute(k,v); }
+  kids.forEach(k => n.append(k));
+  return n;
+}
+const enLigne = () => modeles.filter(m => m.en_ligne);
+
+async function charger(){
+  try { modeles = await (await fetch('/api/models')).json(); }
+  catch(e){ modeles = []; }
+  const sel = $('modele'), ancien = sel.value;
+  sel.replaceChildren(...enLigne().map(m => el('option', {value:m.index, text:m.nom+' — '+m.auteur})));
+  if (enLigne().some(m => String(m.index)===ancien)) sel.value = ancien;
+  $('etat').replaceChildren(...modeles.map(m => el('li', {},
+    el('span',{class:'dot'+(m.en_ligne?' on':'')}),
+    el('span',{text: m.en_ligne ? m.nom+' ('+m.auteur+') · '+m.url : 'Hors ligne · '+m.url}))));
+  if (!modeles.length) $('etat').replaceChildren(el('li',{class:'muted',text:'Aucune API dans apis.json'}));
+  $('calculer').disabled = enLigne().length === 0;
+  construireFormulaire();
+}
+
+// Champs du formulaire : ceux du modèle choisi, ou la réunion des champs de tous les modèles en ligne
+function champsAffiches(){
+  const cibles = $('comparer').checked ? enLigne() : enLigne().filter(m => String(m.index)===$('modele').value);
+  const par = new Map();
+  for (const m of cibles) for (const c of m.champs) {
+    if (!par.has(c.nom)) par.set(c.nom, {...c, par:[m.nom]});
+    else {
+      const e = par.get(c.nom); e.par.push(m.nom);
+      if (e.type==='choix' && c.type==='choix') e.options = [...new Set([...e.options, ...c.options])].sort();
+      if (e.type==='nombre' && c.type==='nombre') { e.min = Math.min(e.min,c.min); e.max = Math.max(e.max,c.max); e.entier = e.entier && c.entier; }
+    }
+  }
+  return {cibles, champs:[...par.values()]};
+}
+
+function construireFormulaire(){
+  const {cibles, champs} = champsAffiches(), cmp = $('comparer').checked;
+  $('modele').disabled = cmp;
+  $('infoModele').textContent = cmp ? 'Comparaison : '+cibles.length+' modèle(s) en ligne. Chaque modèle reçoit uniquement les champs qu\'il attend.'
+    : (cibles[0] ? (cibles[0].description||'')+' · Mesure : '+(cibles[0].cible||'') : '');
+  $('formulaire').replaceChildren(...champs.map(c => {
+    let champ;
+    if (c.type==='choix') {
+      champ = el('select', {id:'f_'+c.nom, 'data-nom':c.nom}, ...c.options.map(o => el('option',{value:o,text:o})));
+      champ.value = c.options.includes(c.defaut) ? c.defaut : c.options[0];
+    } else {
+      champ = el('input', {id:'f_'+c.nom, 'data-nom':c.nom, type:'number', min:c.min, max:c.max, step:c.entier?1:'any', value:c.defaut});
+    }
+    const aide = c.type==='nombre' ? 'Entre '+c.min+' et '+c.max : '';
+    const qui = cmp && c.par.length < cibles.length ? ' · '+c.par.join(', ') : '';
+    return el('div', {}, el('label',{for:'f_'+c.nom, text:c.libelle||c.nom}), champ,
+              (aide||qui) ? el('div',{class:'hint',text:aide+qui}) : '');
+  }));
+}
+
+function carteResultat(r){
+  const tete = el('h3', {text:r.nom}, el('span',{class:'who',text:' · '+r.auteur}));
+  if (!r.ok) return el('div',{class:'res'}, tete, el('div',{class:'errbox'}, el('ul',{}, ...r.erreurs.map(e => el('li',{text:e})))));
+  return el('div',{class:'res'}, tete,
+    el('div',{class:'big',text:r.score_pct+' %'}),
+    el('div',{class:'muted',text:r.cible+' · seuil de décision '+Math.round(r.seuil*1000)/10+' %'}),
+    (() => { const b = el('div',{class:'bar'}, el('i',{style:'width:'+r.score_pct+'%'}), el('b',{style:'left:'+(r.seuil*100)+'%'})); return b; })(),
+    el('span',{class:'badge '+(r.contacter?'ok':'no'), text: r.contacter ? 'Prospect prioritaire : à inclure dans la campagne' : 'Non prioritaire pour cette campagne'}));
+}
+
+async function calculer(){
+  const {cibles} = champsAffiches();
+  const donnees = {};
+  document.querySelectorAll('[data-nom]').forEach(n => donnees[n.dataset.nom] = n.value);
+  $('calculer').disabled = true;
+  try {
+    const rep = await fetch('/api/score', {method:'POST', headers:{'Content-Type':'application/json'},
+                                           body: JSON.stringify({indices: cibles.map(m => m.index), donnees})});
+    const res = await rep.json();
+    $('resultats').replaceChildren(...(Array.isArray(res) ? res.map(carteResultat) : [el('div',{class:'errbox',text:res.erreur||'Erreur'})]));
+  } catch(e) { $('resultats').replaceChildren(el('div',{class:'errbox',text:'Le site ne répond pas.'})); }
+  $('calculer').disabled = enLigne().length === 0;
+}
+
+$('modele').addEventListener('change', construireFormulaire);
+$('comparer').addEventListener('change', construireFormulaire);
+$('calculer').addEventListener('click', calculer);
+$('actualiser').addEventListener('click', charger);
+charger();
+</script>
+</body>
+</html>
