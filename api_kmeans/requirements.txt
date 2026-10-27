@@ -1,0 +1,7 @@
+# Mêmes versions que le groupe (règle du GUIDE_EQUIPE.md)
+# scikit-learn==1.6.1  <- version imposée à tous les membres
+scikit-learn==1.6.1
+pandas==3.1.0
+numpy==2.5.4
+joblib==1.6.0
+flask==3.1.3
