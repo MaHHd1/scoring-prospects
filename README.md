@@ -113,9 +113,10 @@ to match the runner and `site/apis.json`. In PowerShell, environment variables a
   when the source dataset is available. The script looks for `CC GENERAL.csv` in its folder or
   a parent folder, or accepts the CSV path as an argument.
 
-The website's `apis.json` also lists ports `5002` and `5003` for team models. There are no
-corresponding API folders in this repository, so those entries appear offline until their
-owners run their APIs and provide reachable URLs.
+The website's `apis.json` lists six model API slots on ports `5001` through `5006`. This
+repository includes APIs on `5001` (Random Forest) and `5004` (K-Means); ports `5002`, `5003`,
+`5005`, and `5006` are available for the other team models. Until their APIs are running and
+reachable, those entries appear offline. The website itself uses port `5000`.
 
 ## API contract
 
@@ -156,8 +157,9 @@ The exact fields required in `donnees` depend on the selected model and are decl
    any applicable options or bounds from `GET /api/info`.
 2. Ensure the saved pipeline includes all preprocessing required for inference and accepts the
    raw fields declared by the API.
-3. Use a distinct port. The team convention reserves `5001` through `5003` for team APIs; the
-   current K-Means service uses `5004`.
+3. Use a distinct model port from `5001` through `5006`. The website uses port `5000`. Currently,
+   Random Forest uses `5001` and K-Means uses `5004`; the remaining team API slots are `5002`,
+   `5003`, `5005`, and `5006`.
 4. Start the API and check `http://localhost:PORT/api/health`.
 5. Add its URL to the `apis` list in [`site/apis.json`](site/apis.json). For an API on the same
    computer, use `http://127.0.0.1:PORT`. For an API on another computer, use its reachable IP
