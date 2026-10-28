@@ -6,6 +6,9 @@ Analogie avec ce que vous connaissez deja (Java / Angular) :
   - application.properties  ->  les PORT ci-dessous (la configuration)
   - bouton Run / ng serve    ->  CE script, declenche par .vscode/launch.json (F5 dans VS Code)
 
+Dans VS Code, « Run Python File » lance uniquement le fichier ouvert. Pour demarrer tout le
+projet avec ce bouton, ouvrez ce fichier ; sinon utilisez F5 et choisissez « Run all scoring services ».
+
 Usage :
     python lancer_tout.py       # demarre ce qui manque et ouvre http://127.0.0.1:5000
     Ctrl+C                      # arrete les services que CE script a demarres
