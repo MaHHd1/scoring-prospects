@@ -26,8 +26,10 @@ the website to display.
 
 The website does not load or execute model files and does not run the notebooks. Each API loads
 its saved model when that API process starts. In this repository, the K-Means API loads
-[`api_kmeans/modele_kmeans.joblib`](api_kmeans/modele_kmeans.joblib), and the Random Forest API
-loads [`api_random_forest/modele.joblib`](api_random_forest/modele.joblib).
+[`api_kmeans/modele_kmeans.joblib`](api_kmeans/modele_kmeans.joblib), the Random Forest API
+loads [`api_random_forest/modele.joblib`](api_random_forest/modele.joblib), and the Gradient
+Boosting API loads
+[`api_Gradient Boosting/modele_defaut_paiement.joblib`](api_Gradient%20Boosting/modele_defaut_paiement.joblib).
 
 The notebooks are used to develop and train models. The saved model artifact and its API code
 are what serve predictions while the application is running. Retraining a model requires
@@ -45,6 +47,7 @@ the website and both included APIs:
 py -m venv venv
 .\venv\Scripts\python.exe -m pip install --upgrade pip
 .\venv\Scripts\python.exe -m pip install -r .\api_random_forest\requirements.txt
+.\venv\Scripts\python.exe -m pip install -r ".\api_Gradient Boosting\requirements.txt"
 .\venv\Scripts\python.exe -m pip install -r .\api_kmeans\requirements.txt
 .\venv\Scripts\python.exe -m pip install requests
 ```
@@ -76,6 +79,10 @@ Then run each service in its own terminal from the repository root:
 ```
 
 ```powershell
+.\venv\Scripts\python.exe ".\api_Gradient Boosting\api.py"
+```
+
+```powershell
 $env:PORT = "5004"
 .\venv\Scripts\python.exe .\api_kmeans\api.py
 ```
@@ -84,10 +91,11 @@ $env:PORT = "5004"
 .\venv\Scripts\python.exe .\site\site.py
 ```
 
-Open `http://127.0.0.1:5000`. The APIs default to ports `5001` (Random Forest) and `5004`
-(K-Means); the website defaults to port `5000`. The K-Means command sets its port explicitly
-to match the runner and `site/apis.json`. In PowerShell, environment variables are set with
-`$env:NAME = "value"`; in other shells, use that shell's environment-variable syntax.
+Open `http://127.0.0.1:5000`. The APIs default to ports `5001` (Random Forest), `5002`
+(Gradient Boosting), and `5004` (K-Means); the website defaults to port `5000`. The K-Means
+command sets its port explicitly to match the runner and `site/apis.json`. In PowerShell,
+environment variables are set with `$env:NAME = "value"`; in other shells, use that shell's
+environment-variable syntax.
 
 ## Models included in this repository
 
@@ -98,6 +106,19 @@ to match the runner and `site/apis.json`. In PowerShell, environment variables a
 - Default API port: `5001`
 - The API loads the saved pipeline, validates the requested input fields, and returns a
   probability score and decision threshold.
+- Its `requirements.txt` lists its Python dependencies.
+
+### Gradient Boosting (défaut de paiement)
+
+- API: [`api_Gradient Boosting/api.py`](api_Gradient%20Boosting/api.py)
+- Saved model: `api_Gradient Boosting/modele_defaut_paiement.joblib`
+- Default API port: `5002`
+- Predicts whether a credit-card customer will default on next month's payment using six months
+  of repayment history (delays, invoices, payments) and the credit limit.
+- HistGradientBoostingClassifier with balanced class weighting, trained on 16 selected features.
+- [`api_Gradient Boosting/train_model.py`](api_Gradient%20Boosting/train_model.py) can retrain
+  and save the pipeline when the source dataset is available. The script looks for
+  `UCI_Credit_Card.csv` in its folder or a parent folder, or accepts the CSV path as an argument.
 - Its `requirements.txt` lists its Python dependencies.
 
 ### K-Means customer segmentation
@@ -114,9 +135,10 @@ to match the runner and `site/apis.json`. In PowerShell, environment variables a
   a parent folder, or accepts the CSV path as an argument.
 
 The website's `apis.json` lists six model API slots on ports `5001` through `5006`. This
-repository includes APIs on `5001` (Random Forest) and `5004` (K-Means); ports `5002`, `5003`,
-`5005`, and `5006` are available for the other team models. Until their APIs are running and
-reachable, those entries appear offline. The website itself uses port `5000`.
+repository includes APIs on `5001` (Random Forest), `5002` (Gradient Boosting), and `5004`
+(K-Means); ports `5003`, `5005`, and `5006` are available for the other team models. Until
+their APIs are running and reachable, those entries appear offline. The website itself uses
+port `5000`.
 
 ## API contract
 
@@ -158,8 +180,8 @@ The exact fields required in `donnees` depend on the selected model and are decl
 2. Ensure the saved pipeline includes all preprocessing required for inference and accepts the
    raw fields declared by the API.
 3. Use a distinct model port from `5001` through `5006`. The website uses port `5000`. Currently,
-   Random Forest uses `5001` and K-Means uses `5004`; the remaining team API slots are `5002`,
-   `5003`, `5005`, and `5006`.
+   Random Forest uses `5001`, Gradient Boosting uses `5002`, and K-Means uses `5004`; the
+   remaining team API slots are `5003`, `5005`, and `5006`.
 4. Start the API and check `http://localhost:PORT/api/health`.
 5. Add its URL to the `apis` list in [`site/apis.json`](site/apis.json). For an API on the same
    computer, use `http://127.0.0.1:PORT`. For an API on another computer, use its reachable IP
@@ -194,6 +216,12 @@ production deployment.
 .
 ├── .vscode/
 │   └── launch.json             # VS Code F5 profile for the full app
+├── api_Gradient Boosting/
+│   ├── api.py                  # Gradient Boosting Flask API
+│   ├── modele_defaut_paiement.joblib  # Trained Gradient Boosting pipeline
+│   ├── preparation_defaut.py   # Custom sklearn transformer for the pipeline
+│   ├── requirements.txt
+│   └── train_model.py          # Retrain and save the pipeline
 ├── api_kmeans/
 │   ├── api.py                  # K-Means Flask API
 │   ├── modele_kmeans.joblib    # Trained K-Means pipeline
