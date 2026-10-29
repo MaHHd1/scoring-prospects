@@ -36,28 +36,33 @@ currently on disk.
 
 ## Requirements and setup
 
-Python 3.10 or later is recommended. On Windows, open PowerShell in the repository root.
+Python 3.10 or later is required. Clone the repository and run the following from its root.
+The shared root [`requirements.txt`](requirements.txt) pins the compatible dependencies for
+the website and all six APIs; use it rather than installing each API's requirements separately.
 
-Create the virtual environment expected by the app runner, then install the dependencies for
-the website and all six model APIs:
+On Windows, open PowerShell:
 
 ```powershell
 py -m venv venv
 .\venv\Scripts\python.exe -m pip install --upgrade pip
-.\venv\Scripts\python.exe -m pip install -r .\api_random_forest\requirements.txt
-.\venv\Scripts\python.exe -m pip install -r .\api_kmeans\requirements.txt
-.\venv\Scripts\python.exe -m pip install -r .\api_Lasso_Regression\requirements.txt
-.\venv\Scripts\python.exe -m pip install -r ".\api_Gradient Boosting\requirements.txt"
-.\venv\Scripts\python.exe -m pip install -r .\api_isolation_forest\requirements.txt
-.\venv\Scripts\python.exe -m pip install -r .\api_lightgbm\requirements.txt
-.\venv\Scripts\python.exe -m pip install requests
+.\venv\Scripts\python.exe -m pip install -r .\requirements.txt
 ```
 
-The runner uses `venv\Scripts\python.exe` on Windows (`venv/bin/python` on macOS/Linux). The
-Isolation Forest requirements pin scikit-learn to version `1.6.1`; install those requirements
-before LightGBM, which uses the same scikit-learn version. The checked-in Lasso
-artifact was serialized with scikit-learn `1.9.1`. It currently loads and predicts with `1.6.1`
-but emits compatibility warnings; retrain it in the shared environment before relying on it:
+On macOS or Linux:
+
+```bash
+python3 -m venv venv
+./venv/bin/python -m pip install --upgrade pip
+./venv/bin/python -m pip install -r requirements.txt
+```
+
+Once dependencies are installed, start the website and all APIs with
+`python lancer_tout.py` (or use the VS Code **Run all scoring services** profile below).
+The runner uses the repository's virtual environment on Windows and macOS/Linux.
+
+The checked-in Lasso artifact was serialized with scikit-learn `1.9.1`. It currently loads and
+predicts with the shared `1.6.1` dependency but emits compatibility warnings; retrain it before
+relying on it:
 
 ```powershell
 .\venv\Scripts\python.exe .\api_Lasso_Regression\train_model.py
@@ -139,8 +144,10 @@ with `$env:NAME = "value"`; in other shells, use that shell's environment-variab
 - Default API port: `5006`
 - Identifies prospects likely to subscribe to a term deposit, using the Bank Marketing fields
   declared by the API.
+- The trained `modele_final_membre4.joblib` artifact is not included in the repository. Without
+  it, the API remains available in demo mode; provide the artifact to use Ranim's trained model.
 - The app runner starts this API with Uvicorn. Install its dependencies from
-  [`api_lightgbm/requirements.txt`](api_lightgbm/requirements.txt).
+  the shared root [`requirements.txt`](requirements.txt) along with the other services.
 
 ### Lasso Regression — bank asset value
 
@@ -191,7 +198,10 @@ with `$env:NAME = "value"`; in other shells, use that shell's environment-variab
   example a different scikit-learn version), the API retrains it automatically at startup.
 
 The website's `apis.json` lists six model APIs on ports `5001` through `5006`, including Ranim's
-LightGBM API on `5006`. The website itself uses port `5000`.
+LightGBM API on `5006`. The website itself uses port `5000`. Cloning and running the repository
+starts the APIs on that computer; it does not publish them to the internet. To share one running
+instance across the internet, deploy the site and APIs to a reachable server and configure their
+addresses and network access accordingly.
 
 ## API contract
 
@@ -267,6 +277,7 @@ production deployment.
 
 ```text
 .
+├── requirements.txt            # Shared pinned runtime dependencies for all services
 ├── .vscode/
 │   └── launch.json             # VS Code F5 profile for the full app
 ├── api_Gradient Boosting/
