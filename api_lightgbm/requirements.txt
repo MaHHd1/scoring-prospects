@@ -1,0 +1,9 @@
+# Dépendances de l'API LightGBM
+fastapi==0.115.12
+uvicorn==0.34.3
+pydantic==2.11.4
+lightgbm==4.6.0
+scikit-learn==1.6.1
+pandas==2.2.3
+numpy==2.2.5
+joblib==1.5.0
