@@ -25,11 +25,8 @@ website sends the corresponding input to the selected model API. The API returns
 the website to display.
 
 The website does not load or execute model files and does not run the notebooks. Each API loads
-its saved model when that API process starts. In this repository, the K-Means API loads
-[`api_kmeans/modele_kmeans.joblib`](api_kmeans/modele_kmeans.joblib), the Random Forest API
-loads [`api_random_forest/modele.joblib`](api_random_forest/modele.joblib), and the Gradient
-Boosting API loads
-[`api_Gradient Boosting/modele_defaut_paiement.joblib`](api_Gradient%20Boosting/modele_defaut_paiement.joblib).
+its saved model when that API process starts. The repository includes Random Forest, Lasso
+Regression, Isolation Forest, K-Means, and Gradient Boosting APIs. The app runner starts all five.
 
 The notebooks are used to develop and train models. The saved model artifact and its API code
 are what serve predictions while the application is running. Retraining a model requires
@@ -41,20 +38,31 @@ currently on disk.
 Python 3.10 or later is recommended. On Windows, open PowerShell in the repository root.
 
 Create the virtual environment expected by the app runner, then install the dependencies for
-the website and both included APIs:
+the website and all five model APIs:
 
 ```powershell
 py -m venv venv
 .\venv\Scripts\python.exe -m pip install --upgrade pip
 .\venv\Scripts\python.exe -m pip install -r .\api_random_forest\requirements.txt
-.\venv\Scripts\python.exe -m pip install -r ".\api_Gradient Boosting\requirements.txt"
 .\venv\Scripts\python.exe -m pip install -r .\api_kmeans\requirements.txt
+.\venv\Scripts\python.exe -m pip install -r .\api_Lasso_Regression\requirements.txt
+.\venv\Scripts\python.exe -m pip install -r ".\api_Gradient Boosting\requirements.txt"
+.\venv\Scripts\python.exe -m pip install -r .\api_isolation_forest\requirements.txt
 .\venv\Scripts\python.exe -m pip install requests
 ```
 
 The runner uses `venv\Scripts\python.exe` on Windows (`venv/bin/python` on macOS/Linux). The
-K-Means requirements pin scikit-learn to version `1.6.1`; use compatible dependency versions
-when training or replacing the saved model artifacts.
+Isolation Forest requirements pin scikit-learn to version `1.6.1`; install them last to retain
+the shared version required by the Isolation Forest and K-Means artifacts. The checked-in Lasso
+artifact was serialized with scikit-learn `1.9.1`. It currently loads and predicts with `1.6.1`
+but emits compatibility warnings; retrain it in the shared environment before relying on it:
+
+```powershell
+.\venv\Scripts\python.exe .\api_Lasso_Regression\train_model.py
+```
+
+The training CSV is included in `api_Lasso_Regression`. Use compatible dependency versions when
+training or replacing any saved model artifact.
 
 ## Run everything from VS Code
 
@@ -79,6 +87,16 @@ Then run each service in its own terminal from the repository root:
 ```
 
 ```powershell
+.\venv\Scripts\python.exe .\api_Lasso_Regression\api.py
+```
+
+```powershell
+$env:PORT = "5003"
+.\venv\Scripts\python.exe .\api_isolation_forest\api.py
+```
+
+```powershell
+$env:PORT = "5005"
 .\venv\Scripts\python.exe ".\api_Gradient Boosting\api.py"
 ```
 
@@ -91,11 +109,11 @@ $env:PORT = "5004"
 .\venv\Scripts\python.exe .\site\site.py
 ```
 
-Open `http://127.0.0.1:5000`. The APIs default to ports `5001` (Random Forest), `5002`
-(Gradient Boosting), and `5004` (K-Means); the website defaults to port `5000`. The K-Means
-command sets its port explicitly to match the runner and `site/apis.json`. In PowerShell,
-environment variables are set with `$env:NAME = "value"`; in other shells, use that shell's
-environment-variable syntax.
+Open `http://127.0.0.1:5000`. The APIs use ports `5001` (Random Forest), `5002` (Lasso),
+`5003` (Isolation Forest), `5004` (K-Means), and `5005` (Gradient Boosting); the website uses
+port `5000`. The K-Means and Gradient Boosting commands set their ports explicitly to match the
+runner/site configuration. In PowerShell, environment variables are set with `$env:NAME = "value"`;
+in other shells, use that shell's environment-variable syntax.
 
 ## Models included in this repository
 
@@ -108,18 +126,18 @@ environment-variable syntax.
   probability score and decision threshold.
 - Its `requirements.txt` lists its Python dependencies.
 
-### Gradient Boosting (défaut de paiement)
+### Lasso Regression — bank asset value
 
-- API: [`api_Gradient Boosting/api.py`](api_Gradient%20Boosting/api.py)
-- Saved model: `api_Gradient Boosting/modele_defaut_paiement.joblib`
+- API: [`api_Lasso_Regression/api.py`](api_Lasso_Regression/api.py)
+- Saved pipeline: [`api_Lasso_Regression/modele_lasso.joblib`](api_Lasso_Regression/modele_lasso.joblib)
 - Default API port: `5002`
-- Predicts whether a credit-card customer will default on next month's payment using six months
-  of repayment history (delays, invoices, payments) and the credit limit.
-- HistGradientBoostingClassifier with balanced class weighting, trained on 16 selected features.
-- [`api_Gradient Boosting/train_model.py`](api_Gradient%20Boosting/train_model.py) can retrain
-  and save the pipeline when the source dataset is available. The script looks for
-  `UCI_Credit_Card.csv` in its folder or a parent folder, or accepts the CSV path as an argument.
-- Its `requirements.txt` lists its Python dependencies.
+- Estimates `bank_asset_value` using five financial fields from the loan approval dataset.
+  The pipeline imputes missing values, standardizes the inputs, and applies Lasso Regression.
+- [`api_Lasso_Regression/train_model.py`](api_Lasso_Regression/train_model.py) retrains the
+  pipeline from the included `loan_approval_dataset.csv`.
+- Compatibility note: the committed artifact was trained with scikit-learn `1.9.1`, not the
+  shared `1.6.1` dependency. It loads with a warning in the shared environment; retraining as
+  described above regenerates the artifact with the installed version.
 
 ### K-Means customer segmentation
 
@@ -134,6 +152,16 @@ environment-variable syntax.
   when the source dataset is available. The script looks for `CC GENERAL.csv` in its folder or
   a parent folder, or accepts the CSV path as an argument.
 
+### Gradient Boosting — credit default
+
+- API: [`api_Gradient Boosting/api.py`](api_Gradient%20Boosting/api.py)
+- Saved pipeline: `api_Gradient Boosting/modele_defaut_paiement.joblib`
+- Default API port: `5005`
+- Predicts credit-card payment default from customer repayment history and credit-limit fields.
+- [`api_Gradient Boosting/train_model.py`](api_Gradient%20Boosting/train_model.py) can retrain
+  the model from the included `UCI_Credit_Card.csv`.
+- The app runner starts this API on port `5005`.
+
 ### Isolation Forest (transactions atypiques)
 
 - API: [`api_isolation_forest/api.py`](api_isolation_forest/api.py)
@@ -147,10 +175,9 @@ environment-variable syntax.
   example a different scikit-learn version), the API retrains it automatically at startup.
 
 The website's `apis.json` lists six model API slots on ports `5001` through `5006`. This
-repository includes APIs on `5001` (Random Forest), `5002` (Gradient Boosting), and `5004`
-(K-Means); ports `5003`, `5005`, and `5006` are available for the other team models. Until
-their APIs are running and reachable, those entries appear offline. The website itself uses
-port `5000`.
+repository includes APIs on `5001` (Random Forest), `5002` (Lasso), `5003` (Isolation Forest),
+`5004` (K-Means), and `5005` (Gradient Boosting). Slot `5006` is unassigned and appears offline
+until an API is added and reachable. The website itself uses port `5000`.
 
 ## API contract
 
@@ -192,8 +219,8 @@ The exact fields required in `donnees` depend on the selected model and are decl
 2. Ensure the saved pipeline includes all preprocessing required for inference and accepts the
    raw fields declared by the API.
 3. Use a distinct model port from `5001` through `5006`. The website uses port `5000`. Currently,
-   Random Forest uses `5001`, Gradient Boosting uses `5002`, and K-Means uses `5004`; the
-   remaining team API slots are `5003`, `5005`, and `5006`.
+   Random Forest uses `5001`, Lasso uses `5002`, Isolation Forest uses `5003`, K-Means uses
+   `5004`, and Gradient Boosting uses `5005`; `5006` is available.
 4. Start the API and check `http://localhost:PORT/api/health`.
 5. Add its URL to the `apis` list in [`site/apis.json`](site/apis.json). For an API on the same
    computer, use `http://127.0.0.1:PORT`. For an API on another computer, use its reachable IP
@@ -230,15 +257,25 @@ production deployment.
 │   └── launch.json             # VS Code F5 profile for the full app
 ├── api_Gradient Boosting/
 │   ├── api.py                  # Gradient Boosting Flask API
-│   ├── modele_defaut_paiement.joblib  # Trained Gradient Boosting pipeline
+│   ├── modele_defaut_paiement.joblib
 │   ├── preparation_defaut.py   # Custom sklearn transformer for the pipeline
 │   ├── requirements.txt
-│   └── train_model.py          # Retrain and save the pipeline
+│   └── train_model.py
 ├── api_kmeans/
 │   ├── api.py                  # K-Means Flask API
 │   ├── modele_kmeans.joblib    # Trained K-Means pipeline
 │   ├── requirements.txt
 │   └── train_model.py          # Retrain and save the pipeline
+├── api_Lasso_Regression/
+│   ├── api.py                  # Lasso bank-asset regression API
+│   ├── modele_lasso.joblib     # Trained Lasso pipeline
+│   ├── requirements.txt
+│   └── train_model.py
+├── api_isolation_forest/
+│   ├── api.py                  # Transaction anomaly-detection API
+│   ├── modele_isolation_forest.joblib
+│   ├── requirements.txt
+│   └── train_model.py
 ├── api_random_forest/
 │   ├── api.py                  # Random Forest Flask API
 │   ├── modele.joblib           # Trained Random Forest model

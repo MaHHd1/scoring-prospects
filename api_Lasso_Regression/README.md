@@ -28,7 +28,9 @@ Placez `loan_approval_dataset.csv` dans ce dossier, ou indiquez le chemin comple
 python train_model.py loan_approval_dataset.csv
 ```
 
-Cette commande crée `modele_lasso.joblib`. Le fichier modèle n'est pas inclus dans ce paquet : il doit être généré à partir du dataset réel.
+Cette commande crée ou remplace `modele_lasso.joblib`. Un modèle pré-entraîné est déjà inclus
+dans le dépôt. Il a été sérialisé avec scikit-learn 1.9.1 ; si l'environnement partagé utilise
+scikit-learn 1.6.1, réentraînez-le avec cette commande pour éviter l'avertissement de version.
 
 ## 4. Lancer l'API
 
