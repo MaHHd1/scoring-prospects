@@ -113,6 +113,18 @@ to match the runner and `site/apis.json`. In PowerShell, environment variables a
   when the source dataset is available. The script looks for `CC GENERAL.csv` in its folder or
   a parent folder, or accepts the CSV path as an argument.
 
+### Isolation Forest (transactions atypiques)
+
+- API: [`api_isolation_forest/api.py`](api_isolation_forest/api.py)
+- Saved pipeline: `api_isolation_forest/modele_isolation_forest.joblib`
+- Default API port: `5003`
+- Unsupervised anomaly detection on bank transactions: ratio feature (amount / balance),
+  one-hot encoding of categorical fields, then an Isolation Forest (1000 trees, 5 % alerts).
+- The displayed score is an anomaly score (0-100), not a fraud probability.
+- [`api_isolation_forest/train_model.py`](api_isolation_forest/train_model.py) retrains and saves
+  the pipeline from `bank_transactions_data_2.csv`. If the saved model cannot be loaded (for
+  example a different scikit-learn version), the API retrains it automatically at startup.
+
 The website's `apis.json` lists six model API slots on ports `5001` through `5006`. This
 repository includes APIs on `5001` (Random Forest) and `5004` (K-Means); ports `5002`, `5003`,
 `5005`, and `5006` are available for the other team models. Until their APIs are running and
