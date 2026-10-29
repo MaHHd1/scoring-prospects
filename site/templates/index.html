@@ -118,6 +118,7 @@ footer{font-size:.72rem}
     </div>
   </div>
   <div class="header-meta">
+    <a href="/lasso" class="header-label" style="text-decoration:none;font-weight:700;color:var(--red);padding:6px 12px;border:1px solid #f2d2d8;border-radius:10px;background:#fff;">Estimation actifs (Lasso) →</a>
     <span class="header-label">Espace conseiller</span>
     <span class="live-pill"><i class="live-dot"></i> Analyse commerciale</span>
   </div>
@@ -226,11 +227,18 @@ function construireFormulaire(){
 function carteResultat(r){
   const tete = el('h3', {text:r.nom}, el('span',{class:'who',text:' · '+r.auteur}));
   if (!r.ok) return el('div',{class:'res'}, tete, el('div',{class:'errbox'}, el('ul',{}, ...r.erreurs.map(e => el('li',{text:e})))));
+  if (r.prediction !== undefined) {
+    const valFormatee = new Intl.NumberFormat('fr-FR', {maximumFractionDigits: 2}).format(r.prediction);
+    return el('div',{class:'res'}, tete,
+      el('div',{class:'big',text:valFormatee + ' ' + (r.unite ? '' : 'devise')}),
+      el('div',{class:'muted',text:r.cible || "Estimation d'actifs bancaires"}),
+      r.unite ? el('div',{class:'hint',style:'margin-top:8px',text:r.unite}) : el('span'));
+  }
   return el('div',{class:'res'}, tete,
-    el('div',{class:'big',text:r.score_pct+' %'}),
-    el('div',{class:'muted',text:r.cible+' · seuil de décision '+Math.round(r.seuil*1000)/10+' %'}),
-    (() => { const b = el('div',{class:'bar'}, el('i',{style:'width:'+r.score_pct+'%'}), el('b',{style:'left:'+(r.seuil*100)+'%'})); return b; })(),
-    el('span',{class:'badge '+(r.contacter?'ok':'no'), text: r.contacter ? 'Prospect prioritaire : à inclure dans la campagne' : 'Non prioritaire pour cette campagne'}));
+    el('div',{class:'big',text:(r.score_pct !== undefined ? r.score_pct+' %' : (r.score !== undefined ? r.score : 'N/A'))}),
+    el('div',{class:'muted',text:r.cible+(r.seuil !== undefined ? ' · seuil de décision '+Math.round(r.seuil*1000)/10+' %' : '')}),
+    (() => { if (r.score_pct === undefined || r.seuil === undefined) return el('span'); const b = el('div',{class:'bar'}, el('i',{style:'width:'+r.score_pct+'%'}), el('b',{style:'left:'+(r.seuil*100)+'%'})); return b; })(),
+    r.contacter !== undefined ? el('span',{class:'badge '+(r.contacter?'ok':'no'), text: r.contacter ? 'Prospect prioritaire : à inclure dans la campagne' : 'Non prioritaire pour cette campagne'}) : el('span'));
 }
 
 async function calculer(){

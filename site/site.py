@@ -12,8 +12,10 @@ from concurrent.futures import ThreadPoolExecutor
 
 import requests
 from flask import Flask, jsonify, render_template, request
+from lasso_route import lasso_bp
 
 app = Flask(__name__)
+app.register_blueprint(lasso_bp)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BANQUE = os.environ.get("BANQUE", "Banque Atlas")
 
