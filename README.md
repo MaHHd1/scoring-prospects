@@ -45,9 +45,10 @@ python lancer_tout.py
 On Windows, `py lancer_tout.py` also works; on macOS/Linux, use `python3 lancer_tout.py` if
 `python` does not refer to Python 3. The runner creates the repository's `venv` if needed and
 installs the compatible packages from the shared root [`requirements.txt`](requirements.txt)
-before starting any services. It skips reinstallation until that file changes. The first launch
-needs an internet connection to download packages; there is no need to activate the venv or
-install API requirements separately.
+before starting any services. Downloads use an extended timeout and retry attempts for slower
+connections. It skips reinstallation until that file changes. The first launch needs an internet
+connection to download packages; there is no need to activate the venv or install API requirements
+separately.
 
 The VS Code **Run all scoring services** profile below performs the same setup automatically.
 
@@ -256,6 +257,7 @@ The existing French team guide has additional model-integration notes and common
 |---|---|
 | The page does not open | Confirm the website is responding at `http://127.0.0.1:5000`, and check the runner's terminal for startup errors. |
 | `ModuleNotFoundError` (for example, `No module named 'joblib'`) | Pull the latest changes and rerun `python lancer_tout.py`; the runner installs the shared requirements before starting services. To install manually on Windows, run `.\venv\Scripts\python.exe -m pip install -r .\requirements.txt` from the repository root. |
+| Package download times out | Check the internet connection or VPN/firewall, then rerun `python lancer_tout.py`; pip now retries with a longer timeout. To retry manually on Windows, run `.\venv\Scripts\python.exe -m pip install --timeout 120 --retries 10 -r .\requirements.txt` from the repository root. |
 | An API appears offline | Confirm that API is running, that its URL and port match `site/apis.json`, and that `http://localhost:PORT/api/health` responds. |
 | `venv` is missing | Run `python lancer_tout.py`; the runner creates the virtual environment and installs the shared requirements automatically. |
 | `Address already in use` | Another process is using the port. Stop that service or configure a different port and update the matching URL in `site/apis.json`. |

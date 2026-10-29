@@ -93,13 +93,24 @@ def installer_dependances(exe: str) -> bool:
 
     print("[dependances]   Installation/verifications depuis requirements.txt...")
     resultat = subprocess.run(
-        [exe, "-m", "pip", "install", "-r", str(REQUIREMENTS_FILE)],
+        [
+            exe,
+            "-m",
+            "pip",
+            "install",
+            "--timeout",
+            "120",
+            "--retries",
+            "10",
+            "-r",
+            str(REQUIREMENTS_FILE),
+        ],
         cwd=BASE,
     )
     if resultat.returncode != 0:
         print(
-            "[ECHEC] Installation des dependances impossible. "
-            "Verifiez votre connexion internet, puis relancez lancer_tout.py."
+            "[ECHEC] Installation des dependances impossible apres plusieurs tentatives. "
+            "Verifiez la connexion internet ou le pare-feu, puis relancez lancer_tout.py."
         )
         return False
 
