@@ -36,29 +36,20 @@ currently on disk.
 
 ## Requirements and setup
 
-Python 3.10 or later is required. Clone the repository and run the following from its root.
-The shared root [`requirements.txt`](requirements.txt) pins the compatible dependencies for
-the website and all six APIs; use it rather than installing each API's requirements separately.
+Python 3.10 or later is required. Clone the repository, open a terminal in its root, and run:
 
-On Windows, open PowerShell:
-
-```powershell
-py -m venv venv
-.\venv\Scripts\python.exe -m pip install --upgrade pip
-.\venv\Scripts\python.exe -m pip install -r .\requirements.txt
+```shell
+python lancer_tout.py
 ```
 
-On macOS or Linux:
+On Windows, `py lancer_tout.py` also works; on macOS/Linux, use `python3 lancer_tout.py` if
+`python` does not refer to Python 3. The runner creates the repository's `venv` if needed and
+installs the compatible packages from the shared root [`requirements.txt`](requirements.txt)
+before starting any services. It skips reinstallation until that file changes. The first launch
+needs an internet connection to download packages; there is no need to activate the venv or
+install API requirements separately.
 
-```bash
-python3 -m venv venv
-./venv/bin/python -m pip install --upgrade pip
-./venv/bin/python -m pip install -r requirements.txt
-```
-
-Once dependencies are installed, start the website and all APIs with
-`python lancer_tout.py` (or use the VS Code **Run all scoring services** profile below).
-The runner uses the repository's virtual environment on Windows and macOS/Linux.
+The VS Code **Run all scoring services** profile below performs the same setup automatically.
 
 The checked-in Lasso artifact was serialized with scikit-learn `1.9.1`. It currently loads and
 predicts with the shared `1.6.1` dependency but emits compatibility warnings; retrain it before
@@ -264,8 +255,9 @@ The existing French team guide has additional model-integration notes and common
 | Symptom | Likely cause and resolution |
 |---|---|
 | The page does not open | Confirm the website is responding at `http://127.0.0.1:5000`, and check the runner's terminal for startup errors. |
+| `ModuleNotFoundError` (for example, `No module named 'joblib'`) | Pull the latest changes and rerun `python lancer_tout.py`; the runner installs the shared requirements before starting services. To install manually on Windows, run `.\venv\Scripts\python.exe -m pip install -r .\requirements.txt` from the repository root. |
 | An API appears offline | Confirm that API is running, that its URL and port match `site/apis.json`, and that `http://localhost:PORT/api/health` responds. |
-| `venv` is missing | Create it at the repository root with `py -m venv venv`, then install the dependencies listed above. |
+| `venv` is missing | Run `python lancer_tout.py`; the runner creates the virtual environment and installs the shared requirements automatically. |
 | `Address already in use` | Another process is using the port. Stop that service or configure a different port and update the matching URL in `site/apis.json`. |
 | Model loading reports a version warning or error | Install a scikit-learn version compatible with the one used to save the model; see the API's requirements file. |
 | An input field is missing or rejected | Compare the fields sent by the website with the model's `GET /api/info` response and the API's input validation. |

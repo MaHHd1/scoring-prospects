@@ -17,6 +17,7 @@ Un service deja en marche (p. ex. une API ouverte dans un autre terminal) est
 detecte et laisse tel quel : il ne sera pas demarre une deuxieme fois.
 """
 
+import hashlib
 import os
 import subprocess
 import sys
@@ -27,6 +28,8 @@ from pathlib import Path
 from socket import AF_INET, SOCK_STREAM, socket
 
 BASE = Path(__file__).resolve().parent
+VENV_DIR = BASE / "venv"
+REQUIREMENTS_FILE = BASE / "requirements.txt"
 SITE_URL = "http://127.0.0.1:5000"
 DELAI_ATTENTE = 30  # secondes maximum d'attente par service
 
@@ -55,15 +58,54 @@ SERVICES = [
 
 
 def python_venv() -> str:
-    """Python du venv du depot (les API et le site partagent la meme version)."""
+    """Create and return the repository venv used by every service."""
     candidats = [
-        BASE / "venv" / "Scripts" / "python.exe",  # Windows
-        BASE / "venv" / "bin" / "python",          # macOS / Linux
+        VENV_DIR / "Scripts" / "python.exe",  # Windows
+        VENV_DIR / "bin" / "python",          # macOS / Linux
     ]
     for chemin in candidats:
         if chemin.exists():
             return str(chemin)
-    sys.exit("venv introuvable dans " + str(BASE) + " (lancez d'abord : python -m venv venv)")
+
+    print("[configuration] Environnement Python absent : creation de venv...")
+    resultat = subprocess.run([sys.executable, "-m", "venv", str(VENV_DIR)])
+    if resultat.returncode != 0:
+        raise RuntimeError(
+            "Impossible de creer l'environnement venv. "
+            "Installez le module Python venv puis relancez lancer_tout.py."
+        )
+    for chemin in candidats:
+        if chemin.exists():
+            return str(chemin)
+    raise RuntimeError("L'environnement venv a ete cree, mais son executable Python est introuvable.")
+
+
+def installer_dependances(exe: str) -> bool:
+    """Install root requirements once per venv, and again whenever they change."""
+    if not REQUIREMENTS_FILE.is_file():
+        raise FileNotFoundError("Fichier de dependances introuvable : " + str(REQUIREMENTS_FILE))
+
+    empreinte = hashlib.sha256(REQUIREMENTS_FILE.read_bytes()).hexdigest()
+    marqueur = VENV_DIR / ".requirements.sha256"
+    if marqueur.exists() and marqueur.read_text(encoding="ascii").strip() == empreinte:
+        print("[dependances]   Deja installees (requirements.txt inchange).")
+        return True
+
+    print("[dependances]   Installation/verifications depuis requirements.txt...")
+    resultat = subprocess.run(
+        [exe, "-m", "pip", "install", "-r", str(REQUIREMENTS_FILE)],
+        cwd=BASE,
+    )
+    if resultat.returncode != 0:
+        print(
+            "[ECHEC] Installation des dependances impossible. "
+            "Verifiez votre connexion internet, puis relancez lancer_tout.py."
+        )
+        return False
+
+    marqueur.write_text(empreinte + "\n", encoding="ascii")
+    print("[dependances]   Installation terminee.")
+    return True
 
 
 def port_occupe(port: int) -> bool:
@@ -81,7 +123,14 @@ def pret(url: str) -> bool:
 
 
 def main() -> int:
-    exe = python_venv()
+    try:
+        exe = python_venv()
+        if not installer_dependances(exe):
+            return 1
+    except (OSError, RuntimeError) as error:
+        print(f"[ECHEC] Configuration de l'environnement Python impossible : {error}")
+        return 1
+
     env_base = {**os.environ, "PYTHONUTF8": "1"}
     enfants = []
 
