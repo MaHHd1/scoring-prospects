@@ -9,6 +9,8 @@ pip install flask requests
 python site.py            # http://127.0.0.1:5000   (PORT=8000 python site.py pour changer de port)
 ```
 Ajouter le modèle d'un coéquipier : ajouter `{"url": "http://ADRESSE:PORT"}` dans `apis.json` (pas de redémarrage nécessaire, cliquer « Actualiser »).
+L'API LightGBM de Ranim est configurée sur le port `5006` et démarre avec `lancer_tout.py`.
+Installez ses dépendances (`api_lightgbm/requirements.txt`) avant de lancer tous les services.
 
 ## Lancer tous les services depuis VS Code
 Depuis la racine du dépôt, ouvrez `lancer_tout.py` puis cliquez sur « Run Python File » pour démarrer

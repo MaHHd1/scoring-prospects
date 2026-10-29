@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lance tout le projet d'un seul geste : les 2 API + le site, puis ouvre le navigateur.
+"""Lance tout le projet d'un seul geste : les API + le site, puis ouvre le navigateur.
 
 Analogie avec ce que vous connaissez deja (Java / Angular) :
   - pom.xml / package.json  ->  requirements.txt   (les dependances, deja present)
@@ -36,19 +36,26 @@ try:
 except Exception:
     pass
 
-# (nom, sous-dossier, port, script, chemin de sante HTTP)
+# (nom, sous-dossier, port, arguments Python, chemin de sante HTTP)
 SERVICES = [
-    ("API Random Forest (Mahdi Lakhoua)",     "api_random_forest",     5001, "api.py", "/api/health"),
-    ("API Lasso (Souha Mabrouk)",             "api_Lasso_Regression",  5002, "api.py", "/api/health"),
-    ("API Isolation Forest (Mehdi Dhib)",     "api_isolation_forest",  5003, "api.py", "/api/health"),
-    ("API K-Means (Hedi Hassan)",             "api_kmeans",            5004, "api.py", "/api/health"),
-    ("API Gradient Boosting (Siwar Raouafi)", "api_Gradient Boosting", 5005, "api.py", "/api/health"),
-    ("Site web (Banque Atlas)",               "site",                  5000, "site.py", "/"),
+    ("API Random Forest (Mahdi Lakhoua)",     "api_random_forest",     5001, ("api.py",), "/api/health"),
+    ("API Lasso (Souha Mabrouk)",             "api_Lasso_Regression",  5002, ("api.py",), "/api/health"),
+    ("API Isolation Forest (Mehdi Dhib)",     "api_isolation_forest",  5003, ("api.py",), "/api/health"),
+    ("API K-Means (Hedi Hassan)",             "api_kmeans",            5004, ("api.py",), "/api/health"),
+    ("API Gradient Boosting (Siwar Raouafi)", "api_Gradient Boosting", 5005, ("api.py",), "/api/health"),
+    (
+        "API LightGBM (Ranim Boujlel)",
+        "api_lightgbm",
+        5006,
+        ("-m", "uvicorn", "main:app", "--host", "127.0.0.1", "--port", "5006"),
+        "/api/health",
+    ),
+    ("Site web (Banque Atlas)",               "site",                  5000, ("site.py",), "/"),
 ]
 
 
 def python_venv() -> str:
-    """Python du venv du depot (les deux API et le site partagent la meme version)."""
+    """Python du venv du depot (les API et le site partagent la meme version)."""
     candidats = [
         BASE / "venv" / "Scripts" / "python.exe",  # Windows
         BASE / "venv" / "bin" / "python",          # macOS / Linux
@@ -79,12 +86,12 @@ def main() -> int:
     enfants = []
 
     # 1. Demarrage (ce qui n'est pas deja en marche)
-    for nom, dossier, port, script, _ in SERVICES:
+    for nom, dossier, port, commande, _ in SERVICES:
         if port_occupe(port):
             print(f"[deja en marche] {nom} (port {port})")
             continue
         enfant = subprocess.Popen(
-            [exe, script],
+            [exe, *commande],
             cwd=BASE / dossier,
             env={**env_base, "PORT": str(port)},
         )

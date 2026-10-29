@@ -1,8 +1,8 @@
 # Scoring Prospects
 
 A local web application for exploring prospect-scoring and customer-segmentation models. The
-website provides the interface; each model runs in its own Flask API process and loads its own
-saved model file.
+website provides the interface; each model runs in its own API process and loads its own saved
+model file.
 
 ## Contents
 
@@ -26,7 +26,8 @@ the website to display.
 
 The website does not load or execute model files and does not run the notebooks. Each API loads
 its saved model when that API process starts. The repository includes Random Forest, Lasso
-Regression, Isolation Forest, K-Means, and Gradient Boosting APIs. The app runner starts all five.
+Regression, Isolation Forest, K-Means, Gradient Boosting, and LightGBM APIs. The app runner starts
+all six.
 
 The notebooks are used to develop and train models. The saved model artifact and its API code
 are what serve predictions while the application is running. Retraining a model requires
@@ -38,7 +39,7 @@ currently on disk.
 Python 3.10 or later is recommended. On Windows, open PowerShell in the repository root.
 
 Create the virtual environment expected by the app runner, then install the dependencies for
-the website and all five model APIs:
+the website and all six model APIs:
 
 ```powershell
 py -m venv venv
@@ -48,12 +49,13 @@ py -m venv venv
 .\venv\Scripts\python.exe -m pip install -r .\api_Lasso_Regression\requirements.txt
 .\venv\Scripts\python.exe -m pip install -r ".\api_Gradient Boosting\requirements.txt"
 .\venv\Scripts\python.exe -m pip install -r .\api_isolation_forest\requirements.txt
+.\venv\Scripts\python.exe -m pip install -r .\api_lightgbm\requirements.txt
 .\venv\Scripts\python.exe -m pip install requests
 ```
 
 The runner uses `venv\Scripts\python.exe` on Windows (`venv/bin/python` on macOS/Linux). The
-Isolation Forest requirements pin scikit-learn to version `1.6.1`; install them last to retain
-the shared version required by the Isolation Forest and K-Means artifacts. The checked-in Lasso
+Isolation Forest requirements pin scikit-learn to version `1.6.1`; install those requirements
+before LightGBM, which uses the same scikit-learn version. The checked-in Lasso
 artifact was serialized with scikit-learn `1.9.1`. It currently loads and predicts with `1.6.1`
 but emits compatibility warnings; retrain it in the shared environment before relying on it:
 
@@ -101,6 +103,10 @@ $env:PORT = "5005"
 ```
 
 ```powershell
+.\venv\Scripts\python.exe -m uvicorn main:app --app-dir .\api_lightgbm --host 127.0.0.1 --port 5006
+```
+
+```powershell
 $env:PORT = "5004"
 .\venv\Scripts\python.exe .\api_kmeans\api.py
 ```
@@ -110,10 +116,10 @@ $env:PORT = "5004"
 ```
 
 Open `http://127.0.0.1:5000`. The APIs use ports `5001` (Random Forest), `5002` (Lasso),
-`5003` (Isolation Forest), `5004` (K-Means), and `5005` (Gradient Boosting); the website uses
-port `5000`. The K-Means and Gradient Boosting commands set their ports explicitly to match the
-runner/site configuration. In PowerShell, environment variables are set with `$env:NAME = "value"`;
-in other shells, use that shell's environment-variable syntax.
+`5003` (Isolation Forest), `5004` (K-Means), `5005` (Gradient Boosting), and `5006` (LightGBM);
+the website uses port `5000`. The K-Means and Gradient Boosting commands set their ports
+explicitly to match the runner/site configuration. In PowerShell, environment variables are set
+with `$env:NAME = "value"`; in other shells, use that shell's environment-variable syntax.
 
 ## Models included in this repository
 
@@ -125,6 +131,16 @@ in other shells, use that shell's environment-variable syntax.
 - The API loads the saved pipeline, validates the requested input fields, and returns a
   probability score and decision threshold.
 - Its `requirements.txt` lists its Python dependencies.
+
+### LightGBM — bank marketing
+
+- API: [`api_lightgbm/main.py`](api_lightgbm/main.py) (FastAPI)
+- Saved model: `api_lightgbm/modele_final_membre4.joblib` (optional; demo scoring is used if absent)
+- Default API port: `5006`
+- Identifies prospects likely to subscribe to a term deposit, using the Bank Marketing fields
+  declared by the API.
+- The app runner starts this API with Uvicorn. Install its dependencies from
+  [`api_lightgbm/requirements.txt`](api_lightgbm/requirements.txt).
 
 ### Lasso Regression — bank asset value
 
@@ -174,10 +190,8 @@ in other shells, use that shell's environment-variable syntax.
   the pipeline from `bank_transactions_data_2.csv`. If the saved model cannot be loaded (for
   example a different scikit-learn version), the API retrains it automatically at startup.
 
-The website's `apis.json` lists six model API slots on ports `5001` through `5006`. This
-repository includes APIs on `5001` (Random Forest), `5002` (Lasso), `5003` (Isolation Forest),
-`5004` (K-Means), and `5005` (Gradient Boosting). Slot `5006` is unassigned and appears offline
-until an API is added and reachable. The website itself uses port `5000`.
+The website's `apis.json` lists six model APIs on ports `5001` through `5006`, including Ranim's
+LightGBM API on `5006`. The website itself uses port `5000`.
 
 ## API contract
 
@@ -218,9 +232,9 @@ The exact fields required in `donnees` depend on the selected model and are decl
    any applicable options or bounds from `GET /api/info`.
 2. Ensure the saved pipeline includes all preprocessing required for inference and accepts the
    raw fields declared by the API.
-3. Use a distinct model port from `5001` through `5006`. The website uses port `5000`. Currently,
-   Random Forest uses `5001`, Lasso uses `5002`, Isolation Forest uses `5003`, K-Means uses
-   `5004`, and Gradient Boosting uses `5005`; `5006` is available.
+3. Use a distinct model port; the website uses port `5000` and this repository currently uses
+   `5001` through `5006` (LightGBM uses `5006`). For an additional API, choose another unused
+   port and add its URL to `site/apis.json`.
 4. Start the API and check `http://localhost:PORT/api/health`.
 5. Add its URL to the `apis` list in [`site/apis.json`](site/apis.json). For an API on the same
    computer, use `http://127.0.0.1:PORT`. For an API on another computer, use its reachable IP
@@ -276,6 +290,10 @@ production deployment.
 │   ├── modele_isolation_forest.joblib
 │   ├── requirements.txt
 │   └── train_model.py
+├── api_lightgbm/
+│   ├── main.py                 # LightGBM FastAPI API
+│   ├── scoring.py              # Model and demo scoring
+│   └── requirements.txt
 ├── api_random_forest/
 │   ├── api.py                  # Random Forest Flask API
 │   ├── modele.joblib           # Trained Random Forest model

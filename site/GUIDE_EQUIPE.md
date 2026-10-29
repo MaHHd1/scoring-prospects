@@ -7,7 +7,7 @@ Chacun a son notebook, ses données, son modèle. Vous n'avez rien à faire sur 
 2. Dans le bloc « A MODIFIER » de VII.2, renseignez :
    - `MODELE` (votre pipeline entraîné), `SEUIL_MODELE`, `X_REF` (vos données d'apprentissage brutes), `FEATURES_API` (vos variables brutes) ;
    - `NOM_MODELE`, `AUTEUR`, `DESCRIPTION`, `CIBLE` (ce que mesure votre score : « Probabilité de défaut », etc.) ;
-   - `PORT` : un port différent par API, de `5001` à `5006` (le site utilise le port `5000`) ;
+   - `PORT` : un port différent par API (le site utilise `5000`, LightGBM/Ranim utilise `5006`) ;
    - facultatif : `LIBELLES` (noms lisibles des champs) et `BORNES`.
 3. Exécutez VII.2 (crée le dossier `api_xxx/`) puis VII.3 (teste l'API dans le notebook). Les 4 vérifications doivent réussir.
 4. Téléchargez le dossier `api_xxx/` (depuis Google Drive si vous êtes sur Colab) et lancez-le sur votre ordinateur :
@@ -22,7 +22,8 @@ Chacun a son notebook, ses données, son modèle. Vous n'avez rien à faire sur 
 - Le pipeline doit **inclure tout le prétraitement** et accepter directement les variables brutes (celles de `FEATURES_API`).
 - Seulement des composants scikit-learn / numpy (pas de fonction définie dans le notebook, sinon l'API ne recharge pas le fichier ; la cellule le détecte).
 - Même version de scikit-learn pour tous (écrite dans `requirements.txt`).
-- Un port différent par API ; les six ports réservés aux modèles sont `5001` à `5006`.
+- Un port différent par API. Les ports `5001` à `5006` sont actuellement attribués, dont
+  `5006` à LightGBM/Ranim ; choisir un autre port libre pour une API supplémentaire.
 - Le site utilise `5000` et n'est pas un port de modèle.
 
 ## Problèmes fréquents
@@ -32,5 +33,5 @@ Chacun a son notebook, ses données, son modèle. Vous n'avez rien à faire sur 
 | `KeyError` / colonne manquante dans le test | `X_REF` ou `FEATURES_API` ne correspond pas à ce que le pipeline attend | Utiliser les colonnes brutes d'avant le pipeline |
 | `InconsistentVersionWarning` au lancement | Version de scikit-learn différente | `pip install -r requirements.txt` |
 | Le site affiche l'API « hors ligne » | API non lancée, mauvais port, pare-feu | Vérifier `http://localhost:PORT/api/health` ; pour d'autres PC, utiliser l'IP et autoriser le port |
-| `Address already in use` | Port déjà pris | Choisir un autre port modèle libre entre `5001` et `5006` et mettre à jour `site/apis.json`. |
+| `Address already in use` | Port déjà pris | Choisir un autre port libre et mettre à jour `site/apis.json`. |
 | Un champ catégoriel a une très longue liste | Variable à beaucoup de modalités | Acceptable, ou regrouper les modalités dans le pipeline |
