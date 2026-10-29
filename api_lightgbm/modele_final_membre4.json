@@ -1,0 +1,49 @@
+{
+  "modele": "LightGBM",
+  "strategie_desequilibre": "class_weight (scale_pos_weight)",
+  "hyperparametres": {
+    "colsample_bytree": 0.7733551396716398,
+    "learning_rate": 0.017398074711291726,
+    "min_child_samples": 72,
+    "n_estimators": 551,
+    "num_leaves": 58,
+    "reg_lambda": 6.58410616012161,
+    "subsample": 0.9579309401710595
+  },
+  "seuil_decision": 0.6089,
+  "metriques_test": {
+    "PR-AUC": 0.4715,
+    "ROC-AUC": 0.8065
+  },
+  "variables_attendues": [
+    "age",
+    "job",
+    "marital",
+    "education",
+    "default",
+    "balance",
+    "housing",
+    "loan",
+    "contact",
+    "day",
+    "month",
+    "campaign",
+    "pdays",
+    "previous",
+    "poutcome"
+  ],
+  "exclue": [
+    "duration"
+  ],
+  "type_de_score": "probabilit?",
+  "source_dataset": "bank-full.csv",
+  "lignes_utilisees": 45211,
+  "lignes_apprentissage": 36168,
+  "test_lignes": 9043,
+  "versions": {
+    "python_sklearn": "1.6.1",
+    "lightgbm": "4.6.0",
+    "pandas": "2.2.3",
+    "numpy": "2.2.5"
+  }
+}
