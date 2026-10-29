@@ -40,6 +40,7 @@ except Exception:
 SERVICES = [
     ("API Random Forest (Mahdi Lakhoua)", "api_random_forest", 5001, "api.py", "/api/health"),
     ("API Lasso (Souha Mabrouk)",         "api_Lasso_Regression", 5002, "api.py", "/api/health"),
+    ("API Isolation Forest (Mehdi Dhib)", "api_isolation_forest", 5003, "api.py", "/api/health"),
     ("API K-Means (Hedi Hassan)",         "api_kmeans",        5004, "api.py", "/api/health"),
     ("Site web (Banque Atlas)",           "site",              5000, "site.py", "/"),
 ]

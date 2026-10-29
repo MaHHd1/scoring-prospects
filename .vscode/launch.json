@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run all scoring services",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/lancer_tout.py",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "subProcess": false
+    }
+  ]
+}
