@@ -38,10 +38,11 @@ except Exception:
 
 # (nom, sous-dossier, port, script, chemin de sante HTTP)
 SERVICES = [
-    ("API Random Forest (Mahdi Lakhoua)",    "api_random_forest",     5001, "api.py", "/api/health"),
+    ("API Random Forest (Mahdi Lakhoua)",     "api_random_forest",     5001, "api.py", "/api/health"),
     ("API Gradient Boosting (Siwar Raouafi)", "api_Gradient Boosting", 5002, "api.py", "/api/health"),
-    ("API K-Means (Hedi Hassan)",            "api_kmeans",            5004, "api.py", "/api/health"),
-    ("Site web (Banque Atlas)",              "site",                  5000, "site.py", "/"),
+    ("API Isolation Forest (Mehdi Dhib)",     "api_isolation_forest",  5003, "api.py", "/api/health"),
+    ("API K-Means (Hedi Hassan)",             "api_kmeans",            5004, "api.py", "/api/health"),
+    ("Site web (Banque Atlas)",               "site",                  5000, "site.py", "/"),
 ]
 
 
