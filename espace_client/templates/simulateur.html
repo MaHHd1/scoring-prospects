@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block titre %}Votre offre personnalisée — {{ banque }}{% endblock %}
+{% block page %}page-simulateur{% endblock %}
+{% block entete %}<script>document.documentElement.classList.add('js');</script>{% endblock %}
+
+{% block contenu %}
+<section class="section section--haut">
+  <div class="conteneur conteneur--form">
+    <header class="section__entete">
+      <p class="surtitre">Simulation</p>
+      <h1>Trouvons votre carte</h1>
+      <p class="section__sous">Répondez selon votre usage habituel, pas selon un projet ponctuel.</p>
+    </header>
+
+    <form method="post" action="{{ url_for('offre') }}" class="form" novalidate>
+      <div class="progres" hidden>
+        <div class="progres__barre"><span></span></div>
+        <p class="progres__texte">Étape 1 sur {{ etapes|length }}</p>
+      </div>
+
+      {% for etape in etapes %}
+      <fieldset class="etape{% if loop.first %} etape--active{% endif %}" data-etape="{{ loop.index }}">
+        <legend class="etape__titre"><span class="etape__num">{{ loop.index }}</span>{{ etape.titre }}</legend>
+        <div class="grille-champs">
+          {% for nom, champ in etape.champs %}
+          <div class="champ{% if erreurs[nom] %} champ--erreur{% endif %}">
+            <label for="champ-{{ nom }}">{{ champ.libelle }}</label>
+
+            {% if champ.type == 'choix' %}
+              <div class="choix" role="radiogroup" aria-labelledby="champ-{{ nom }}">
+                {% for option in champ.options %}
+                <label class="choix__option">
+                  <input type="radio" id="champ-{{ nom }}-{{ option.valeur }}" name="{{ nom }}"
+                         value="{{ option.valeur }}"{% if saisie[nom] == option.valeur %} checked{% endif %}>
+                  <span>{{ option.libelle }}</span>
+                </label>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="champ__saisie">
+                <input type="number" id="champ-{{ nom }}" name="{{ nom }}" value="{{ saisie[nom] }}"
+                       min="{{ champ.min }}" max="{{ champ.max }}" step="{{ champ.pas }}"
+                       inputmode="decimal"{% if erreurs[nom] %} aria-invalid="true"{% endif %}>
+                <span class="champ__unite">{{ champ.unite }}</span>
+              </div>
+            {% endif %}
+
+            {% if champ.aide %}<p class="champ__aide">{{ champ.aide }}</p>{% endif %}
+            {% if erreurs[nom] %}<p class="champ__erreur">{{ erreurs[nom] }}</p>{% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </fieldset>
+      {% endfor %}
+
+      <div class="form__actions">
+        <button type="button" class="btn btn--fantome form__retour">Retour</button>
+        <button type="button" class="btn btn--or form__suivant">Continuer</button>
+        <button type="submit" class="btn btn--or btn--large form__envoyer">Voir mon offre</button>
+      </div>
+
+      <p class="form__mention">
+        Ces réponses servent uniquement à calculer une offre indicative. Aucun numéro de carte,
+        aucun identifiant bancaire ne vous est demandé.
+      </p>
+    </form>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}<script src="{{ url_for('static', filename='simulateur.js') }}" defer></script>{% endblock %}

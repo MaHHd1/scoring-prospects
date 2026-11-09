@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titre %}{{ banque }}{% endblock %}</title>
+  <meta name="description" content="{% block description %}Découvrez la carte bancaire et le plafond que la banque vous recommande.{% endblock %}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  {% block entete %}{% endblock %}
+</head>
+<body class="{% block page %}{% endblock %}">
+  <a class="saut" href="#contenu">Aller au contenu</a>
+
+  <header class="entete">
+    <div class="conteneur entete__in">
+      <a class="marque" href="{{ url_for('accueil') }}">
+        <span class="marque__sceau" aria-hidden="true">A</span>
+        <span class="marque__texte">{{ banque }}<small>Banque de détail</small></span>
+      </a>
+      <nav class="nav" aria-label="Navigation principale">
+        <a href="{{ url_for('accueil') }}#cartes">Nos cartes</a>
+        <a href="{{ url_for('accueil') }}#parcours">Comment ça marche</a>
+        <a href="{{ url_for('accueil') }}#securite">Sécurité</a>
+      </nav>
+      <a class="btn btn--or" href="{{ url_for('formulaire') }}">Trouver ma carte</a>
+    </div>
+  </header>
+
+  <main id="contenu">
+    {% block contenu %}{% endblock %}
+  </main>
+
+  <footer class="pied">
+    <div class="conteneur pied__grille">
+      <div class="pied__marque">
+        <span class="marque__sceau" aria-hidden="true">A</span>
+        <p><strong>{{ banque }}</strong><br>Banque de détail — Tunis</p>
+      </div>
+      <div>
+        <h4>Nos cartes</h4>
+        <ul>
+          <li>Atlas Essentielle</li>
+          <li>Atlas Gold</li>
+          <li>Atlas Infinite</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Besoin d'aide ?</h4>
+        <ul>
+          <li>+216 71 000 000</li>
+          <li>Du lundi au samedi, 8h–19h</li>
+          <li>conseiller@banque-atlas.tn</li>
+        </ul>
+      </div>
+    </div>
+    <div class="conteneur pied__legal">
+      <p>Prototype pédagogique réalisé dans le cadre d'un projet de machine learning.
+         Les offres, tarifs et chiffres affichés sont fictifs.</p>
+      <p>© 2026 {{ banque }} — Les simulations présentées ne constituent pas une offre de crédit.</p>
+    </div>
+  </footer>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block titre %}{{ banque }} — la carte qui vous ressemble{% endblock %}
+{% block page %}page-accueil{% endblock %}
+
+{% block contenu %}
+<section class="hero">
+  <div class="conteneur hero__grille">
+    <div class="hero__texte">
+      <p class="surtitre">Nouveau · offre sur mesure</p>
+      <h1>La carte Atlas<br>qui vous ressemble.</h1>
+      <p class="hero__chapeau">
+        Neuf questions sur votre usage réel, et nous vous recommandons la carte,
+        le plafond et les avantages adaptés à votre profil. Deux minutes, sans
+        justificatif.
+      </p>
+      <div class="hero__actions">
+        <a class="btn btn--or btn--large" href="{{ url_for('formulaire') }}">Découvrir mon offre</a>
+        <a class="btn btn--fantome btn--large" href="#cartes">Comparer les cartes</a>
+      </div>
+      <p class="hero__note">Aucun numéro de compte, aucune donnée bancaire sensible demandée.</p>
+    </div>
+
+    <div class="hero__visuel" aria-hidden="true">
+      <div class="carte3d carte3d--infinite">
+        <span class="carte3d__banque">{{ banque }}</span>
+        <span class="carte3d__puce"></span>
+        <span class="carte3d__numero">•••• •••• •••• 4821</span>
+        <span class="carte3d__bas"><span>ATLAS INFINITE</span><span>09/31</span></span>
+      </div>
+      <div class="carte3d carte3d--gold">
+        <span class="carte3d__banque">{{ banque }}</span>
+        <span class="carte3d__puce"></span>
+        <span class="carte3d__numero">•••• •••• •••• 6304</span>
+        <span class="carte3d__bas"><span>ATLAS GOLD</span><span>04/30</span></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="bandeau">
+  <div class="conteneur bandeau__in">
+    <div><strong>250 000</strong><span>clients particuliers</span></div>
+    <div><strong>120</strong><span>agences en Tunisie</span></div>
+    <div><strong>4,8/5</strong><span>satisfaction client</span></div>
+    <div><strong>24/7</strong><span>assistance carte</span></div>
+  </div>
+</section>
+
+<section class="section" id="cartes">
+  <div class="conteneur">
+    <header class="section__entete">
+      <p class="surtitre">Nos cartes</p>
+      <h2>Trois cartes, trois façons de vivre au quotidien</h2>
+      <p class="section__sous">La simulation vous indique celle qui correspond à votre usage — vous restez libre de choisir.</p>
+    </header>
+
+    <div class="cartes">
+      {% for carte in cartes %}
+      <article class="carte-offre carte-offre--{{ carte.cle }}">
+        <h3>{{ carte.nom }}</h3>
+        <p class="carte-offre__accroche">{{ carte.accroche }}</p>
+        <p class="carte-offre__prix">{{ carte.cotisation }}{% if carte.cotisation != 'Gratuite' %}<span> de cotisation</span>{% endif %}</p>
+        <p class="carte-offre__ligne">Plafond de {{ carte.plafond_min|tnd }} à {{ carte.plafond_max|tnd }}</p>
+        <p class="carte-offre__ligne">Cashback {{ carte.cashback }} sur vos achats</p>
+        <ul class="carte-offre__avantages">
+          {% for avantage in carte.avantages %}
+          <li>{{ avantage }}</li>
+          {% endfor %}
+        </ul>
+        <a class="btn btn--contour" href="{{ url_for('formulaire') }}">Vérifier mon éligibilité</a>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section section--sombre" id="parcours">
+  <div class="conteneur">
+    <header class="section__entete">
+      <p class="surtitre">Comment ça marche</p>
+      <h2>Une recommandation claire, en trois étapes</h2>
+    </header>
+    <ol class="parcours">
+      <li class="parcours__etape">
+        <span class="parcours__num">1</span>
+        <h3>Décrivez votre usage</h3>
+        <p>Dépenses par carte, retraits, mode de remboursement, revenu net : neuf réponses, aucune pièce justificative.</p>
+      </li>
+      <li class="parcours__etape">
+        <span class="parcours__num">2</span>
+        <h3>Nous analysons votre profil</h3>
+        <p>Notre modèle de segmentation regroupe les clients aux comportements proches et situe le vôtre parmi trois profils.</p>
+      </li>
+      <li class="parcours__etape">
+        <span class="parcours__num">3</span>
+        <h3>Recevez votre offre</h3>
+        <p>Carte recommandée, plafond calculé selon vos dépenses et votre revenu, arguments détaillés et rendez-vous conseiller.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section class="section" id="securite">
+  <div class="conteneur">
+    <header class="section__entete">
+      <p class="surtitre">Confiance</p>
+      <h2>Vos données restent à la banque</h2>
+    </header>
+    <div class="atouts">
+      <article class="atout">
+        <h3>Rien de sensible</h3>
+        <p>Le questionnaire ne demande ni numéro de carte, ni identifiant bancaire, ni pièce d'identité.</p>
+      </article>
+      <article class="atout">
+        <h3>Une décision explicable</h3>
+        <p>Chaque recommandation est justifiée par des règles publiées : profil, dépenses, revenu, plafond d'endettement.</p>
+      </article>
+      <article class="atout">
+        <h3>Un conseiller disponible</h3>
+        <p>La synthèse de votre simulation est transmise à votre conseiller, qui confirme l'offre en agence.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section section--sable">
+  <div class="conteneur conteneur--etroit">
+    <header class="section__entete">
+      <p class="surtitre">Questions fréquentes</p>
+      <h2>Ce que les clients demandent</h2>
+    </header>
+    <details class="faq">
+      <summary>La simulation engage-t-elle la banque ?</summary>
+      <p>Non. Elle donne une recommandation indicative ; la carte et le plafond définitifs sont confirmés par votre conseiller, après vérification de votre dossier.</p>
+    </details>
+    <details class="faq">
+      <summary>Comment est calculé le plafond proposé ?</summary>
+      <p>À partir de vos dépenses mensuelles par carte, du multiple propre à la carte choisie et d'un plafond de trois mois de revenu net.</p>
+    </details>
+    <details class="faq">
+      <summary>Que devient mon profil ?</summary>
+      <p>Il est résumé dans une synthèse destinée au conseiller. Aucune donnée n'est revendue ni utilisée pour de la publicité.</p>
+    </details>
+    <details class="faq">
+      <summary>Puis-je simuler plusieurs fois ?</summary>
+      <p>Oui, autant que vous voulez. Modifiez vos réponses pour comparer les cartes et les plafonds.</p>
+    </details>
+  </div>
+</section>
+
+<section class="appel">
+  <div class="conteneur appel__in">
+    <div>
+      <h2>Prêt à connaître votre offre ?</h2>
+      <p>Deux minutes, neuf questions, une recommandation immédiate.</p>
+    </div>
+    <a class="btn btn--or btn--large" href="{{ url_for('formulaire') }}">Démarrer la simulation</a>
+  </div>
+</section>
+{% endblock %}

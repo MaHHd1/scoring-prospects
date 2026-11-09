@@ -10,7 +10,8 @@ Dans VS Code, « Run Python File » lance uniquement le fichier ouvert. Pour dem
 projet avec ce bouton, ouvrez ce fichier ; sinon utilisez F5 et choisissez « Run all scoring services ».
 
 Usage :
-    python lancer_tout.py       # demarre ce qui manque et ouvre http://127.0.0.1:5000
+    python lancer_tout.py       # demarre ce qui manque et ouvre l'espace client http://127.0.0.1:5070
+    #                             (le site conseiller reste disponible sur http://127.0.0.1:5000)
     Ctrl+C                      # arrete les services que CE script a demarres
 
 Un service deja en marche (p. ex. une API ouverte dans un autre terminal) est
@@ -31,6 +32,7 @@ BASE = Path(__file__).resolve().parent
 VENV_DIR = BASE / "venv"
 REQUIREMENTS_FILE = BASE / "requirements.txt"
 SITE_URL = "http://127.0.0.1:5000"
+SITE_CLIENT_URL = "http://127.0.0.1:5070"
 DELAI_ATTENTE = 30  # secondes maximum d'attente par service
 
 # Messages immediats, meme si la sortie est redirigee vers un fichier.
@@ -54,6 +56,7 @@ SERVICES = [
         "/api/health",
     ),
     ("Site web (Banque Atlas)",               "site",                  5000, ("site.py",), "/"),
+    ("Espace client (commercial)",             "espace_client",         5070, ("app.py",), "/api/sante"),
 ]
 
 
@@ -171,12 +174,17 @@ def main() -> int:
             print(f"[ECHEC]          {nom} ne repond pas ({url})")
             echecs.append(nom)
 
-    # 3. Ouverture du site
-    if pret(SITE_URL):
-        print(f"\nOuverture du site : {SITE_URL}")
-        webbrowser.open(SITE_URL)
-    else:
-        print(f"\nLe site n'a pas repondu sur {SITE_URL} : voir les messages ci-dessus.")
+    # 3. Ouverture de l'espace client ; le site conseiller reste accessible a cote.
+    print()
+    ouvert = False
+    for url, libelle in ((SITE_CLIENT_URL, "l'espace client"), (SITE_URL, "le site conseiller (interne)")):
+        if pret(url):
+            print(f"Ouverture de {libelle} : {url}")
+            webbrowser.open(url)
+            ouvert = True
+            break
+    if not ouvert:
+        print(f"Aucun site n'a repondu (client {SITE_CLIENT_URL}, conseiller {SITE_URL}) : voir les messages ci-dessus.")
         for _, _, enfant in enfants:
             if enfant.poll() is None:
                 enfant.terminate()

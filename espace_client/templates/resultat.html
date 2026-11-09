@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block titre %}Votre offre — {{ offre.carte.nom }} | {{ banque }}{% endblock %}
+{% block page %}page-resultat{% endblock %}
+
+{% block contenu %}
+<section class="section section--haut">
+  <div class="conteneur conteneur--resultat">
+    <p class="surtitre">Votre offre personnalisée</p>
+    <h1>{{ offre.carte.nom }}</h1>
+    <p class="section__sous">{{ offre.carte.accroche }}</p>
+
+    {% if offre.degrade %}
+    <div class="alerte" role="status">
+      <strong>Moteur de personnalisation momentanément indisponible.</strong>
+      Cette offre est calculée à partir des règles de la banque uniquement : elle reste indicative.
+      <a href="{{ url_for('formulaire') }}">Relancer la simulation</a>.
+    </div>
+    {% endif %}
+
+    <div class="resultat">
+      <article class="resultat__carte carte3d carte3d--{{ offre.carte.cle }}">
+        <span class="carte3d__banque">{{ banque }}</span>
+        <span class="carte3d__puce"></span>
+        <span class="carte3d__numero">•••• •••• •••• 0000</span>
+        <span class="carte3d__bas"><span>{{ offre.carte.nom|upper }}</span><span>09/31</span></span>
+      </article>
+
+      <aside class="resultat__resume">
+        <h2>Votre recommandation</h2>
+        <p class="resultat__profil">
+          Profil « {{ offre.profil.nom }} »
+          <small>{{ offre.profil.resume }}</small>
+        </p>
+
+        {% if offre.pertinence is not none %}
+        <div class="jauge">
+          <div class="jauge__tete">
+            <span>Pertinence de l'offre</span>
+            <strong>{{ offre.pertinence|pct }}</strong>
+          </div>
+          <div class="jauge__barre"><span style="width: {{ offre.pertinence }}%"></span></div>
+        </div>
+        {% endif %}
+
+        <dl class="chiffres">
+          <div><dt>Plafond recommandé</dt><dd>{{ offre.plafond|tnd }}</dd></div>
+          <div><dt>Cotisation</dt><dd>{{ offre.carte.cotisation }}</dd></div>
+          <div><dt>Cashback</dt><dd>{{ offre.carte.cashback }}</dd></div>
+          <div><dt>Retraits / mois</dt><dd>{{ offre.valeurs.retraits_mensuels|tnd }}</dd></div>
+        </dl>
+
+        <div class="resultat__actions">
+          <button type="button" class="btn btn--or btn--large" id="demander">Demander cette carte</button>
+          <a class="btn btn--fantome" href="{{ url_for('formulaire') }}">Refaire une simulation</a>
+          <button type="button" class="btn btn--lien" id="imprimer">Imprimer la synthèse</button>
+        </div>
+
+        <p class="confirmation" id="confirmation" hidden>
+          <strong>Demande enregistrée.</strong> Un conseiller vous contacte sous 48 heures ouvrées
+          pour confirmer l'offre et réunir les pièces du dossier.
+        </p>
+      </aside>
+    </div>
+
+    <div class="resultat__bloc">
+      <h2>Pourquoi cette offre</h2>
+      <ul class="raisons">
+        {% for raison in offre.raisons %}
+        <li>{{ raison }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <details class="conseiller">
+      <summary>Synthèse pour votre conseiller</summary>
+      <div class="conseiller__in">
+        <p class="conseiller__badge{% if offre.conseiller.prioritaire %} conseiller__badge--prioritaire{% endif %}">
+          {% if offre.conseiller.prioritaire %}Prospect prioritaire{% else %}Suivi standard{% endif %}
+        </p>
+
+        <dl class="chiffres chiffres--colonnes">
+          {% for libelle, valeur in offre.conseiller.resume %}
+          <div><dt>{{ libelle }}</dt><dd>{{ valeur }}</dd></div>
+          {% endfor %}
+        </dl>
+
+        <p><strong>Action recommandée :</strong> {{ offre.conseiller.action }}</p>
+        <p class="conseiller__note">{{ offre.conseiller.note }}</p>
+      </div>
+    </details>
+
+    <p class="mentions">
+      Simulation indicative réalisée le {{ date }}. Le plafond et la cotisation définitifs sont
+      confirmés par votre conseiller après étude de votre dossier. Les offres affichées sur ce
+      prototype sont fictives.
+    </p>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}<script src="{{ url_for('static', filename='resultat.js') }}" defer></script>{% endblock %}
