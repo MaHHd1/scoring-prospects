@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block titre %}Page introuvable{% endblock %}
+{% block entete %}Page introuvable{% endblock %}
+
+{% block contenu %}
+<section class="bloc">
+  <p class="encart-texte">Ce segment ou cette page n'existe pas.</p>
+  <p><a class="lien-bas" href="{{ url_for('accueil') }}">← Revenir à la vue d'ensemble</a></p>
+</section>
+{% endblock %}

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titre %}Pilotage clients{% endblock %} · {{ banque }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <aside class="side">
+    <a class="marque" href="{{ url_for('accueil') }}">
+      <span class="marque-sceau">A</span>
+      <span class="marque-texte">
+        <strong>Atlas</strong>
+        <small>Pilotage clients</small>
+      </span>
+    </a>
+
+    <nav class="nav">
+      <p class="nav-titre">Portefeuille</p>
+      <a href="{{ url_for('accueil') }}" class="{{ 'actif' if request.path == '/' }}">Vue d'ensemble</a>
+      {% for cle in ['champions', 'loyaux', 'prometteurs', 'a_reveiller', 'dormants'] %}
+        <a href="{{ url_for('segment', cle=cle) }}" class="{{ 'actif' if request.path == '/segment/' ~ cle }}">
+          <span class="point" style="background: {{ catalogue[cle].couleur }}"></span>{{ catalogue[cle].nom }}
+        </a>
+      {% endfor %}
+      <p class="nav-titre">Contrôle</p>
+      <a href="{{ url_for('accueil') }}#alertes" class="{{ 'actif' if request.path == '/alertes' }}">Transactions atypiques</a>
+    </nav>
+
+    <div class="side-pied">
+      <p>Prototype interne</p>
+      <p>Portefeuille cartes · 12 mois</p>
+    </div>
+  </aside>
+
+  <main class="contenu">
+    <header class="entete">
+      <div>
+        <p class="sur-titre">{% block sur_titre %}Portefeuille cartes{% endblock %}</p>
+        <h1>{% block entete %}Pilotage clients{% endblock %}</h1>
+      </div>
+      <div class="entete-meta">
+        <span class="pastille">Données au {{ date_reference }}</span>
+      </div>
+    </header>
+
+    {% block contenu %}{% endblock %}
+
+    <footer class="pied">
+      <p>
+        Segments RFM calculés par quintiles sur les transactions du portefeuille ;
+        alertes issues du modèle Isolation Forest (API 5003). Prototype de démonstration.
+      </p>
+    </footer>
+  </main>
+</body>
+</html>

@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block titre %}Vue d'ensemble{% endblock %}
+{% block entete %}Vue d'ensemble{% endblock %}
+
+{% block contenu %}
+<section class="kpis">
+  <article class="kpi">
+    <p class="kpi-label">Clients suivis</p>
+    <p class="kpi-valeur">{{ kpis.clients }}</p>
+    <p class="kpi-note">comptes actifs sur 12 mois</p>
+  </article>
+  <article class="kpi">
+    <p class="kpi-label">Volume traité</p>
+    <p class="kpi-valeur">{{ kpis.volume | tnd }}</p>
+    <p class="kpi-note">toutes transactions confondues</p>
+  </article>
+  <article class="kpi">
+    <p class="kpi-label">Panier moyen</p>
+    <p class="kpi-valeur">{{ kpis.panier | tnd }}</p>
+    <p class="kpi-note">par transaction</p>
+  </article>
+  <article class="kpi">
+    <p class="kpi-label">Inactifs &gt; 90 j</p>
+    <p class="kpi-valeur">{{ kpis.inactifs }}</p>
+    <p class="kpi-note">{{ (kpis.inactifs / kpis.clients) | pct }} du portefeuille</p>
+  </article>
+  <article class="kpi">
+    <p class="kpi-label">Usage digital</p>
+    <p class="kpi-valeur">{{ kpis.part_online | pct }}</p>
+    <p class="kpi-note">des transactions en ligne</p>
+  </article>
+</section>
+
+<section class="bloc">
+  <div class="bloc-entete">
+    <h2>Segments RFM</h2>
+    <p>Récence, fréquence et montant, notés de 1 à 5 puis regroupés en profils d'action.</p>
+  </div>
+  <div class="grille-segments">
+    {% for item in segments %}
+      <a class="carte-segment" href="{{ url_for('segment', cle=item.cle) }}" style="--teinte: {{ item.couleur }}">
+        <p class="carte-nom">{{ item.nom }}</p>
+        <p class="carte-nombre">{{ item.clients }} <span>clients</span></p>
+        <p class="carte-resume">{{ item.resume }}</p>
+        <div class="jauge" title="Part du volume du portefeuille">
+          <span style="width: {{ (item.part_volume * 100) | round(1) }}%"></span>
+        </div>
+        <p class="carte-part">{{ item.part_volume | pct }} du volume · panier {{ item.panier | tnd }}</p>
+        <p class="carte-action">{{ item.action }}</p>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="bloc">
+  <div class="bloc-entete">
+    <h2>Où concentrer l'effort</h2>
+    <p>Les mêmes segments, chiffrés, avec l'action commerciale associée.</p>
+  </div>
+  <div class="tableau-cadre">
+    <table class="tableau">
+      <thead>
+        <tr>
+          <th>Segment</th>
+          <th class="num">Clients</th>
+          <th class="num">Part clients</th>
+          <th class="num">Volume</th>
+          <th class="num">Part volume</th>
+          <th class="num">Panier moyen</th>
+          <th class="num">Récence moy.</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in segments %}
+          <tr>
+            <td>
+              <a class="lien-segment" href="{{ url_for('segment', cle=item.cle) }}">
+                <span class="point" style="background: {{ item.couleur }}"></span>{{ item.nom }}
+              </a>
+            </td>
+            <td class="num">{{ item.clients }}</td>
+            <td class="num">{{ item.part_clients | pct }}</td>
+            <td class="num">{{ item.volume | tnd }}</td>
+            <td class="num">{{ item.part_volume | pct }}</td>
+            <td class="num">{{ item.panier | tnd }}</td>
+            <td class="num">{{ item.recence | round | int }} j</td>
+            <td class="action">{{ item.action }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="deux-colonnes">
+  <article class="bloc">
+    <div class="bloc-entete">
+      <h2>À réveiller en priorité</h2>
+      <p>Fort volume, mais plus de transactions depuis longtemps.</p>
+    </div>
+    <ul class="liste-clients">
+      {% for client in a_reveiller %}
+        <li>
+          <div>
+            <p class="client-nom">{{ client.compte }}</p>
+            <p class="client-detail">{{ client.occupation }} · {{ client.nb }} transactions · dernière le {{ client.derniere.strftime('%d/%m/%Y') }}</p>
+          </div>
+          <div class="client-chiffres">
+            <p class="client-volume">{{ client.volume | tnd }}</p>
+            <p class="client-recence">{{ client.recence }} j</p>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+    <a class="lien-bas" href="{{ url_for('segment', cle='a_reveiller') }}">Voir les {{ segment_a_reveiller.clients }} clients à réveiller →</a>
+  </article>
+
+  <article class="bloc" id="alertes">
+    <div class="bloc-entete">
+      <h2>Transactions atypiques</h2>
+      <p>Score d'atypicité du modèle Isolation Forest sur les transactions les plus déséquilibrées.</p>
+    </div>
+    {% if alertes.en_ligne %}
+      <ul class="liste-alertes">
+        {% for alerte in alertes.lignes %}
+          <li>
+            <div>
+              <p class="client-nom">{{ alerte.compte }} <span class="etiquette">{{ alerte.segment }}</span></p>
+              <p class="client-detail">{{ alerte.date.strftime('%d/%m/%Y') }} · {{ alerte.canal }} · {{ alerte.montant | tnd }} pour un solde de {{ alerte.solde | tnd }}</p>
+            </div>
+            <span class="score {{ 'score-fort' if alerte.alerte else 'score-faible' }}">{{ alerte.score | virgule }}<small>/100</small></span>
+          </li>
+        {% endfor %}
+      </ul>
+      <p class="note">Seuil d'alerte du modèle : {{ alertes.lignes[0].seuil | virgule }} / 100. Un score élevé signale un comportement inhabituel, pas une fraude confirmée.</p>
+    {% else %}
+      <p class="note note-alerte">Modèle d'anomalies hors ligne : démarrez l'API Isolation Forest (port 5003) pour afficher les alertes.</p>
+    {% endif %}
+  </article>
+</section>
+{% endblock %}

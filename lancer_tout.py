@@ -11,6 +11,7 @@ projet avec ce bouton, ouvrez ce fichier ; sinon utilisez F5 et choisissez « Ru
 
 Usage :
     python lancer_tout.py       # demarre ce qui manque et ouvre l'espace client http://127.0.0.1:5070
+    #                             puis le tableau de bord banque http://127.0.0.1:5080
     #                             (le site conseiller reste disponible sur http://127.0.0.1:5000)
     Ctrl+C                      # arrete les services que CE script a demarres
 
@@ -33,6 +34,7 @@ VENV_DIR = BASE / "venv"
 REQUIREMENTS_FILE = BASE / "requirements.txt"
 SITE_URL = "http://127.0.0.1:5000"
 SITE_CLIENT_URL = "http://127.0.0.1:5070"
+TABLEAU_BORD_URL = "http://127.0.0.1:5080"
 DELAI_ATTENTE = 30  # secondes maximum d'attente par service
 
 # Messages immediats, meme si la sortie est redirigee vers un fichier.
@@ -57,6 +59,7 @@ SERVICES = [
     ),
     ("Site web (Banque Atlas)",               "site",                  5000, ("site.py",), "/"),
     ("Espace client (commercial)",             "espace_client",         5070, ("app.py",), "/api/sante"),
+    ("Tableau de bord (banque)",               "tableau_bord",          5080, ("app.py",), "/api/sante"),
 ]
 
 
@@ -174,21 +177,32 @@ def main() -> int:
             print(f"[ECHEC]          {nom} ne repond pas ({url})")
             echecs.append(nom)
 
-    # 3. Ouverture de l'espace client ; le site conseiller reste accessible a cote.
+    # 3. Ouverture des interfaces : espace client puis tableau de bord ; le site
+    #    conseiller (interne) ne sert que de repli.
     print()
-    ouvert = False
-    for url, libelle in ((SITE_CLIENT_URL, "l'espace client"), (SITE_URL, "le site conseiller (interne)")):
-        if pret(url):
-            print(f"Ouverture de {libelle} : {url}")
-            webbrowser.open(url)
-            ouvert = True
-            break
-    if not ouvert:
-        print(f"Aucun site n'a repondu (client {SITE_CLIENT_URL}, conseiller {SITE_URL}) : voir les messages ci-dessus.")
+    a_ouvrir = [
+        (url, libelle)
+        for url, libelle in (
+            (SITE_CLIENT_URL, "espace client"),
+            (TABLEAU_BORD_URL, "tableau de bord banque"),
+        )
+        if pret(url)
+    ]
+    if not a_ouvrir and pret(SITE_URL):
+        a_ouvrir = [(SITE_URL, "site conseiller (interne)")]
+    if not a_ouvrir:
+        print(
+            f"Aucun site n'a repondu (client {SITE_CLIENT_URL}, tableau de bord {TABLEAU_BORD_URL}, "
+            f"conseiller {SITE_URL}) : voir les messages ci-dessus."
+        )
         for _, _, enfant in enfants:
             if enfant.poll() is None:
                 enfant.terminate()
         return 1
+
+    for url, libelle in a_ouvrir:
+        print(f"Ouverture : {libelle} — {url}")
+        webbrowser.open(url)
 
     if echecs:
         print("Services absents (le site les affichera 'Hors ligne') : " + ", ".join(echecs))

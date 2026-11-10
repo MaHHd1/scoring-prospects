@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block titre %}{{ segment.nom }}{% endblock %}
+{% block sur_titre %}Segment RFM · {{ clients | length }} clients{% endblock %}
+{% block entete %}{{ segment.nom }}{% endblock %}
+
+{% block contenu %}
+<p class="fil"><a href="{{ url_for('accueil') }}">Vue d'ensemble</a> <span>/</span> {{ segment.nom }}</p>
+
+<section class="kpis kpis-serre">
+  <article class="kpi">
+    <p class="kpi-label">Clients</p>
+    <p class="kpi-valeur">{{ segment.clients }}</p>
+    <p class="kpi-note">{{ segment.part_clients | pct }} du portefeuille</p>
+  </article>
+  <article class="kpi">
+    <p class="kpi-label">Volume</p>
+    <p class="kpi-valeur">{{ segment.volume | tnd }}</p>
+    <p class="kpi-note">{{ segment.part_volume | pct }} du volume total</p>
+  </article>
+  <article class="kpi">
+    <p class="kpi-label">Panier moyen</p>
+    <p class="kpi-valeur">{{ segment.panier | tnd }}</p>
+    <p class="kpi-note">par transaction</p>
+  </article>
+  <article class="kpi">
+    <p class="kpi-label">Récence moyenne</p>
+    <p class="kpi-valeur">{{ segment.recence | round | int }} j</p>
+    <p class="kpi-note">depuis la dernière transaction</p>
+  </article>
+</section>
+
+<section class="bloc encart" style="--teinte: {{ segment.couleur }}">
+  <h2 class="encart-titre">Action recommandée</h2>
+  <p class="encart-texte">{{ segment.action }}</p>
+  <p class="encart-note">{{ segment.resume }}. Les clients sont triés par volume décroissant ; R, F et M sont les notes RFM de 1 à 5.</p>
+</section>
+
+<section class="bloc">
+  <div class="bloc-entete">
+    <h2>Clients du segment</h2>
+    <p>Triés par volume décroissant, du plus contributif au moins contributif.</p>
+  </div>
+  <div class="tableau-cadre">
+    <table class="tableau tableau-clients">
+      <thead>
+        <tr>
+          <th>Compte</th>
+          <th>Profil</th>
+          <th>Dernière transaction</th>
+          <th class="num">Récence</th>
+          <th class="num">Transactions</th>
+          <th class="num">Volume</th>
+          <th class="num">Panier</th>
+          <th>Canal</th>
+          <th class="num">RFM</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for client in clients %}
+          <tr>
+            <td class="mono">{{ client.compte }}</td>
+            <td>{{ client.occupation }} <span class="discret">{{ client.age }} ans</span></td>
+            <td>{{ client.derniere.strftime('%d/%m/%Y') }}</td>
+            <td class="num">{{ client.recence }} j</td>
+            <td class="num">{{ client.nb }}</td>
+            <td class="num">{{ client.volume | tnd }}</td>
+            <td class="num">{{ client.panier | tnd }}</td>
+            <td>{{ client.canal }}</td>
+            <td class="num"><span class="rfm">{{ client.R }}{{ client.F }}{{ client.M }}</span></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
