@@ -38,7 +38,7 @@
 <section class="bloc">
   <div class="bloc-entete">
     <h2>Clients du segment</h2>
-    <p>Triés par volume décroissant, du plus contributif au moins contributif.</p>
+    <p>Triés par volume décroissant. Cliquez sur un compte pour ouvrir sa fiche et les scores des modèles.</p>
   </div>
   <div class="tableau-cadre">
     <table class="tableau tableau-clients">
@@ -58,7 +58,7 @@
       <tbody>
         {% for client in clients %}
           <tr>
-            <td class="mono">{{ client.compte }}</td>
+            <td class="mono"><a class="lien-client" href="{{ url_for('client', compte=client.compte) }}">{{ client.compte }}</a></td>
             <td>{{ client.occupation }} <span class="discret">{{ client.age }} ans</span></td>
             <td>{{ client.derniere.strftime('%d/%m/%Y') }}</td>
             <td class="num">{{ client.recence }} j</td>

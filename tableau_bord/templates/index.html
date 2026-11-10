@@ -103,7 +103,7 @@
       {% for client in a_reveiller %}
         <li>
           <div>
-            <p class="client-nom">{{ client.compte }}</p>
+            <p class="client-nom"><a class="lien-client" href="{{ url_for('client', compte=client.compte) }}">{{ client.compte }}</a></p>
             <p class="client-detail">{{ client.occupation }} · {{ client.nb }} transactions · dernière le {{ client.derniere.strftime('%d/%m/%Y') }}</p>
           </div>
           <div class="client-chiffres">
@@ -126,7 +126,7 @@
         {% for alerte in alertes.lignes %}
           <li>
             <div>
-              <p class="client-nom">{{ alerte.compte }} <span class="etiquette">{{ alerte.segment }}</span></p>
+              <p class="client-nom"><a class="lien-client" href="{{ url_for('client', compte=alerte.compte) }}">{{ alerte.compte }}</a> <span class="etiquette">{{ alerte.segment }}</span></p>
               <p class="client-detail">{{ alerte.date.strftime('%d/%m/%Y') }} · {{ alerte.canal }} · {{ alerte.montant | tnd }} pour un solde de {{ alerte.solde | tnd }}</p>
             </div>
             <span class="score {{ 'score-fort' if alerte.alerte else 'score-faible' }}">{{ alerte.score | virgule }}<small>/100</small></span>

@@ -41,7 +41,7 @@
         <h1>{% block entete %}Pilotage clients{% endblock %}</h1>
       </div>
       <div class="entete-meta">
-        <span class="pastille">Données au {{ date_reference }}</span>
+        {% if date_reference %}<span class="pastille">Données au {{ date_reference }}</span>{% endif %}
       </div>
     </header>
 
@@ -51,6 +51,10 @@
       <p>
         Segments RFM calculés par quintiles sur les transactions du portefeuille ;
         alertes issues du modèle Isolation Forest (API 5003). Prototype de démonstration.
+      </p>
+      <p class="pied-source">
+        Données : <strong>{{ source.libelle }}</strong>{% if source.le %} · importées le {{ source.le }}{% endif %}
+        · <a href="{{ url_for('demarrer') }}">charger un autre fichier</a>
       </p>
     </footer>
   </main>

@@ -1,0 +1,6 @@
+# Fichiers déposés et état local du prototype : jamais versionnés.
+*.csv
+*.tsv
+*.txt
+*.json
+tmp_*

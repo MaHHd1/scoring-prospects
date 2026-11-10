@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Charger les données · {{ banque }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="page-demarrage">
+  <div class="demarrage">
+    <header class="demarrage-tete">
+      <span class="marque-sceau">A</span>
+      <div>
+        <p class="sur-titre">Espace conseiller</p>
+        <h1>Charger le portefeuille de la banque</h1>
+        <p class="demarrage-sous-titre">
+          Déposez l'extraction des transactions : chaque compte devient une fiche,
+          segmentée et scorée par les modèles du projet.
+        </p>
+      </div>
+    </header>
+
+    <ol class="etapes">
+      <li class="{{ 'etape-faite' if etape == 'colonnes' else 'etape-active' }}">
+        <span>1</span> Fichier
+      </li>
+      <li class="{{ 'etape-active' if etape == 'colonnes' }}">
+        <span>2</span> Colonnes
+      </li>
+      <li><span>3</span> Tableau de bord</li>
+    </ol>
+
+    {% if erreur %}
+      <p class="note note-alerte">{{ erreur }}</p>
+    {% endif %}
+
+    {% if etape == 'fichier' %}
+      <form class="carte-demarrage" method="post" action="{{ url_for('demarrer_analyser') }}" enctype="multipart/form-data">
+        <label class="depot" id="depot">
+          <input type="file" name="fichier" id="fichier" accept=".csv,.tsv,.txt,.json" required>
+          <span class="depot-icone" aria-hidden="true">↑</span>
+          <strong>Déposez le fichier ici</strong>
+          <span class="depot-aide">ou cliquez pour le choisir sur cet ordinateur</span>
+          <span class="depot-nom" id="depot-nom"></span>
+        </label>
+        <p class="depot-formats">
+          CSV, TSV, TXT ou JSON · {{ taille_max }} Mo maximum · une ligne par transaction.
+          Pour un classeur Excel : Fichier → Enregistrer sous → CSV.
+        </p>
+        <div class="actions-modele">
+          <button class="bouton" type="submit">Analyser le fichier</button>
+        </div>
+      </form>
+
+      <div class="demarrage-exemple">
+        <p>
+          {% if source.exemple %}
+            Les données d'exemple du projet (495 comptes) sont affichées tant qu'aucun fichier n'est chargé.
+          {% else %}
+            Source actuelle : <strong>{{ source.libelle }}</strong>{% if source.le %} · importée le {{ source.le }}{% endif %}.
+          {% endif %}
+        </p>
+        <form method="post" action="{{ url_for('demarrer_exemple') }}">
+          <button class="bouton bouton-secondaire" type="submit">Explorer avec les données d'exemple</button>
+        </form>
+      </div>
+
+    {% else %}
+      <section class="carte-demarrage">
+        <div class="bloc-entete">
+          <h2>{{ nom_origine }}</h2>
+          <p>
+            {{ apercu.nb_lignes }} lignes · {{ apercu.nb_colonnes }} colonnes lues.
+            Associez les colonnes du tableau de bord à celles du fichier.
+          </p>
+        </div>
+
+        <div class="tableau-cadre tableau-apercu">
+          <table class="tableau">
+            <thead>
+              <tr>{% for colonne in apercu.colonnes %}<th>{{ colonne }}</th>{% endfor %}</tr>
+            </thead>
+            <tbody>
+              {% for ligne in apercu.lignes %}
+                <tr>{% for valeur in ligne %}<td>{{ valeur }}</td>{% endfor %}</tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <form method="post" action="{{ url_for('demarrer_activer') }}">
+          <input type="hidden" name="fichier" value="{{ fichier }}">
+          <input type="hidden" name="nom_origine" value="{{ nom_origine }}">
+          <div class="champs champs-association">
+            {% for nom, libelle, obligatoire, _mots in champs %}
+              <label class="champ">
+                <span>{{ libelle }}{% if obligatoire %} <em>obligatoire</em>{% endif %}</span>
+                <select name="col_{{ nom }}">
+                  <option value="">— ignorer —</option>
+                  {% for colonne in colonnes %}
+                    <option value="{{ colonne }}" {{ 'selected' if correspondance.get(nom) == colonne }}>{{ colonne }}</option>
+                  {% endfor %}
+                </select>
+              </label>
+            {% endfor %}
+          </div>
+          <p class="depot-formats">
+            Les lignes sans date, sans montant ou avec un sens illisible sont écartées et comptées.
+          </p>
+          <div class="actions-modele">
+            <button class="bouton" type="submit">Utiliser ces données</button>
+            <a class="bouton bouton-secondaire" href="{{ url_for('demarrer') }}">Choisir un autre fichier</a>
+          </div>
+        </form>
+      </section>
+    {% endif %}
+
+    {% if source.source == 'import' %}
+      <p class="demarrage-retour"><a href="{{ url_for('accueil') }}">Revenir au tableau de bord</a></p>
+    {% endif %}
+  </div>
+
+  <script>
+    (function () {
+      var zone = document.getElementById("depot");
+      var champ = document.getElementById("fichier");
+      var nom = document.getElementById("depot-nom");
+      if (!zone || !champ) return;
+
+      function afficher() {
+        nom.textContent = champ.files && champ.files.length ? champ.files[0].name : "";
+        zone.classList.toggle("depot-rempli", !!(champ.files && champ.files.length));
+      }
+
+      champ.addEventListener("change", afficher);
+      ["dragenter", "dragover"].forEach(function (evenement) {
+        zone.addEventListener(evenement, function (e) {
+          e.preventDefault();
+          zone.classList.add("depot-survol");
+        });
+      });
+      ["dragleave", "drop"].forEach(function (evenement) {
+        zone.addEventListener(evenement, function (e) {
+          e.preventDefault();
+          zone.classList.remove("depot-survol");
+        });
+      });
+      zone.addEventListener("drop", function (e) {
+        if (!e.dataTransfer || !e.dataTransfer.files.length) return;
+        champ.files = e.dataTransfer.files;
+        afficher();
+      });
+    })();
+  </script>
+</body>
+</html>

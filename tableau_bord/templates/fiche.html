@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block titre %}Compte {{ client.compte }}{% endblock %}
+{% block sur_titre %}{{ catalogue[client.cle].nom }} · {{ client.occupation }} · {{ client.age }} ans{% endblock %}
+{% block entete %}Compte {{ client.compte }}{% endblock %}
+
+{% block contenu %}
+<p class="fil">
+  <a href="{{ url_for('accueil') }}">Vue d'ensemble</a> <span>/</span>
+  <a href="{{ url_for('segment', cle=client.cle) }}">{{ catalogue[client.cle].nom }}</a> <span>/</span>
+  {{ client.compte }}
+</p>
+
+<section class="kpis kpis-serre">
+  <article class="kpi">
+    <p class="kpi-label">Volume 12 mois</p>
+    <p class="kpi-valeur">{{ client.volume | tnd }}</p>
+    <p class="kpi-note">{{ client.nb }} transactions</p>
+  </article>
+  <article class="kpi">
+    <p class="kpi-label">Panier moyen</p>
+    <p class="kpi-valeur">{{ client.panier | tnd }}</p>
+    <p class="kpi-note">par transaction</p>
+  </article>
+  <article class="kpi">
+    <p class="kpi-label">Récence</p>
+    <p class="kpi-valeur">{{ client.recence }} j</p>
+    <p class="kpi-note">dernière le {{ client.derniere.strftime('%d/%m/%Y') }}</p>
+  </article>
+  <article class="kpi">
+    <p class="kpi-label">Solde moyen</p>
+    <p class="kpi-valeur">{{ client.solde | tnd }}</p>
+    <p class="kpi-note">canal préféré : {{ client.canal }}</p>
+  </article>
+</section>
+
+<section class="bloc">
+  <div class="bloc-entete">
+    <h2>Lecture des modèles</h2>
+    <p>Cinq modèles du projet appliqués à ce compte. Les entrées sont visibles et modifiables sous chaque score ; « Réinitialiser » y remet les valeurs proposées pour ce client.</p>
+  </div>
+
+  <div class="grille-modeles">
+    {% for modele in modeles %}
+      <article class="modele">
+        <div class="modele-tete">
+          <div>
+            <p class="modele-auteur">{{ modele.modele }} · {{ modele.auteur }}</p>
+            <h3>{{ modele.nom }}</h3>
+          </div>
+          <span class="jeton {{ 'jeton-ok' if modele.en_ligne else 'jeton-off' }}">
+            {{ 'en ligne' if modele.en_ligne else 'hors ligne' }}
+          </span>
+        </div>
+
+        <p class="modele-question">{{ modele.question }}</p>
+
+        {% if modele.resultat %}
+          <div class="modele-resultat">
+            <p class="modele-chiffre">
+              {{ modele.resultat.valeur }}<span class="modele-unite">{{ modele.resultat.unite }}</span>
+            </p>
+            {% if modele.resultat.verdict %}
+              <p class="modele-verdict {{ 'verdict-alerte' if modele.resultat.ton == 'alerte' }}">
+                {{ modele.resultat.verdict }}
+              </p>
+            {% endif %}
+            {% if modele.resultat.jauge is not none %}
+              <div class="jauge">
+                <span style="width: {{ modele.resultat.jauge | round(1) }}%"></span>
+              </div>
+            {% endif %}
+            {% if modele.resultat.seuil %}
+              <p class="modele-seuil">Seuil du modèle : {{ modele.resultat.seuil | virgule }} %</p>
+            {% endif %}
+          </div>
+        {% else %}
+          <p class="note note-alerte">Modèle injoignable : démarrez son API (port {{ modele.port }}) pour obtenir un score.</p>
+        {% endif %}
+
+        <p class="modele-source">{{ modele.source }}</p>
+
+        {% if modele.champs %}
+          <details class="modele-details">
+            <summary>Ajuster les entrées ({{ modele.champs | length }} champs)</summary>
+            <form class="ajustement" method="post" action="{{ url_for('client_recalcul', compte=client.compte) }}">
+              <input type="hidden" name="modele" value="{{ modele.cle }}">
+              <div class="champs">
+                {% for champ in modele.champs %}
+                  <label class="champ">
+                    <span>{{ champ.libelle }}</span>
+                    {% if champ.type == 'choix' %}
+                      <select name="{{ champ.nom }}" data-defaut="{{ champ.propose }}">
+                        {% for option in champ.options %}
+                          <option value="{{ option }}" {{ 'selected' if champ.valeur == option }}>{{ option }}</option>
+                        {% endfor %}
+                      </select>
+                    {% else %}
+                      <input type="number" name="{{ champ.nom }}" value="{{ champ.valeur }}" data-defaut="{{ champ.propose }}"
+                             step="{{ '1' if champ.entier else 'any' }}"
+                             {% if champ.min is defined %}min="{{ champ.min }}"{% endif %}
+                             {% if champ.max is defined %}max="{{ champ.max }}"{% endif %}>
+                    {% endif %}
+                  </label>
+                {% endfor %}
+              </div>
+              <div class="actions-modele">
+                <button class="bouton" type="submit" name="action" value="recalculer">Recalculer</button>
+                <button class="bouton bouton-secondaire" type="button" data-reinit
+                        title="Remet les valeurs proposées pour ce client">Réinitialiser</button>
+              </div>
+            </form>
+          </details>
+        {% endif %}
+      </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="bloc">
+  <div class="bloc-entete">
+    <h2>Historique du compte</h2>
+    <p>Six derniers mois, reconstitués depuis les transactions.</p>
+  </div>
+  <div class="tableau-cadre">
+    <table class="tableau">
+      <thead>
+        <tr>
+          <th>Mois</th>
+          <th class="num">Débits</th>
+          <th class="num">Crédits</th>
+          <th class="num">Retraits DAB</th>
+          <th class="num">Opérations</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for index in range(client.mois | length) %}
+          {% set mois = client.mois[index] %}
+          <tr>
+            <td>M-{{ index }}</td>
+            <td class="num">{{ mois.debits | tnd }}</td>
+            <td class="num">{{ mois.credits | tnd }}</td>
+            <td class="num">{{ mois.retraits | tnd }}</td>
+            <td class="num">{{ mois.nb_total }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll("form.ajustement").forEach(function (formulaire) {
+    var bouton = formulaire.querySelector("[data-reinit]");
+    if (!bouton) return;
+    bouton.addEventListener("click", function () {
+      formulaire.querySelectorAll("[data-defaut]").forEach(function (champ) {
+        champ.value = champ.dataset.defaut;
+      });
+    });
+  });
+</script>
+{% endblock %}
