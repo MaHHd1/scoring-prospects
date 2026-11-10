@@ -9,6 +9,7 @@ loads its own saved model file.
 - [How the application works](#how-the-application-works)
 - [Requirements and setup](#requirements-and-setup)
 - [Run everything from VS Code](#run-everything-from-vs-code)
+- [Commercial client website](#commercial-client-website)
 - [Banker dashboard](#banker-dashboard)
 - [Run services manually](#run-services-manually)
 - [Models included in this repository](#models-included-in-this-repository)
@@ -82,6 +83,35 @@ opens the commercial client area at `http://127.0.0.1:5070` and the banker dashb
 selection page at `http://127.0.0.1:5080/demarrer`; the scoring site remains available at
 `http://127.0.0.1:5000`. It leaves already-running services alone. Keep the runner's terminal open
 while using the apps; press **Ctrl+C** there to stop the services it started.
+
+## Commercial client website
+
+[`espace_client/`](espace_client/) contains Banque Atlas's public-facing card-offer prototype,
+separate from the internal scoring site and the banker portfolio dashboard. It runs on port `5070`
+and guides a prospective customer from a card comparison page through a two-step questionnaire to
+a personalized, indicative offer.
+
+The questionnaire asks nine questions about income, card history, spending, payment habits,
+withdrawals, and account balance. The app translates the answers into the 17 input fields expected
+by the K-Means API on port `5004`, then combines its customer segment with commercial rules to
+recommend one of three cards (Atlas Essentielle, Gold, or Infinite) and a spending limit. The result
+explains the recommendation and includes a summary for a banker. If the K-Means API is unavailable,
+the app provides an explicitly labeled approximate offer instead.
+
+This is a demonstration, not an application or approval for a real banking product. The offer is
+indicative and requires confirmation by a banker. For implementation details and the full list of
+routes, see [`espace_client/README.md`](espace_client/README.md).
+
+To run the client website by itself, start the K-Means API on port `5004`, then run this from the
+repository root:
+
+```powershell
+Push-Location .\espace_client
+..\venv\Scripts\python.exe .\app.py
+Pop-Location
+```
+
+Alternatively, run `python lancer_tout.py` to start it with the other project services.
 
 ## Banker dashboard
 
@@ -346,7 +376,12 @@ production deployment.
 │   ├── templates/
 │   ├── static/
 │   └── README.md               # Dashboard setup, features, and limitations
-├── espace_client/              # Commercial client area (port 5070)
+├── espace_client/
+│   ├── app.py                  # Commercial card-offer website (port 5070)
+│   ├── moteur.py               # K-Means integration and offer rules
+│   ├── templates/
+│   ├── static/
+│   └── README.md               # Client journey, routes, and offer logic
 ├── site/
 │   ├── apis.json               # API URLs consumed by the website
 │   ├── site.py                 # Website and scoring proxy endpoints
