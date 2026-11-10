@@ -34,7 +34,7 @@ VENV_DIR = BASE / "venv"
 REQUIREMENTS_FILE = BASE / "requirements.txt"
 SITE_URL = "http://127.0.0.1:5000"
 SITE_CLIENT_URL = "http://127.0.0.1:5070"
-TABLEAU_BORD_URL = "http://127.0.0.1:5080"
+TABLEAU_BORD_URL = "http://127.0.0.1:5080/demarrer"
 DELAI_ATTENTE = 30  # secondes maximum d'attente par service
 
 # Messages immediats, meme si la sortie est redirigee vers un fichier.

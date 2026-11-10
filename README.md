@@ -78,10 +78,10 @@ training or replacing any saved model artifact.
    The profile is defined in [`.vscode/launch.json`](.vscode/launch.json).
 
 The runner starts services that are not already listening and waits for their health checks. It
-opens the commercial client area at `http://127.0.0.1:5070` and the banker dashboard at
-`http://127.0.0.1:5080`; the scoring site remains available at `http://127.0.0.1:5000`. It leaves
-already-running services alone. Keep the runner's terminal open while using the apps; press
-**Ctrl+C** there to stop the services it started.
+opens the commercial client area at `http://127.0.0.1:5070` and the banker dashboard's data
+selection page at `http://127.0.0.1:5080/demarrer`; the scoring site remains available at
+`http://127.0.0.1:5000`. It leaves already-running services alone. Keep the runner's terminal open
+while using the apps; press **Ctrl+C** there to stop the services it started.
 
 ## Banker dashboard
 

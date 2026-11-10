@@ -4,7 +4,7 @@ Petit prototype de l'interface **destinée au conseiller**, par opposition à l'
 commercial (`../espace_client`, port 5070). Il répond à une question simple : une fois les
 clients segmentés, qu'est-ce qu'un conseiller regarde et qu'est-ce qu'il fait ?
 
-- Adresse : <http://127.0.0.1:5080> — s'ouvre sur la page **Charger le portefeuille**
+- Adresse : <http://127.0.0.1:5080/demarrer> — page **Charger le portefeuille**
 - Données : le fichier importé par le conseiller, ou à défaut
   `../api_isolation_forest/bank_transactions_data_2.csv` (495 comptes, 2 512 transactions, 12 mois — montants en TND)
 - Exemple d'import : `tableau_bord/exemple_banque.csv` (40 comptes synthétiques, format français)
@@ -128,7 +128,7 @@ L'action recommandée par segment est écrite en clair dans le code (`SEGMENTS` 
   Prometteurs 49, À réveiller 53, Dormants 183 (495 comptes au total).
 - Les alertes sont affichées avec le score du modèle et le seuil renvoyés par l'API 5003 ;
   si l'API est arrêtée, la page affiche un encart « modèle hors ligne » à la place.
-- `lancer_tout.py` ouvre bien 5070 puis 5080 (vérifié avec `webbrowser.open` instrumenté).
+- `lancer_tout.py` ouvre bien 5070 puis 5080/demarrer (vérifié avec `webbrowser.open` instrumenté).
 - Fiche client : `/client/AC00020` → 200 en 0,6 s avec les cinq scores ; `/client/ZZ99999` → 404 ;
   recalcul POST du risque de défaut pris en compte ; une API déplacée sur un port mort fait passer
   uniquement sa carte en « hors ligne ».
