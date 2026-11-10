@@ -1,14 +1,15 @@
 # Scoring Prospects
 
-A local web application for exploring prospect-scoring and customer-segmentation models. The
-website provides the interface; each model runs in its own API process and loads its own saved
-model file.
+A local banking-prospect scoring project with six model APIs and three web interfaces: a scoring
+site, a commercial client area, and a banker dashboard. Each model runs in its own API process and
+loads its own saved model file.
 
 ## Contents
 
 - [How the application works](#how-the-application-works)
 - [Requirements and setup](#requirements-and-setup)
 - [Run everything from VS Code](#run-everything-from-vs-code)
+- [Banker dashboard](#banker-dashboard)
 - [Run services manually](#run-services-manually)
 - [Models included in this repository](#models-included-in-this-repository)
 - [API contract](#api-contract)
@@ -18,16 +19,21 @@ model file.
 
 ## How the application works
 
-The browser talks to the website on port `5000`. The website reads the API URLs from
+The scoring site on port `5000` reads the API URLs from
 [`site/apis.json`](site/apis.json), requests model information from each API, and builds the
 input form using the fields returned by the online models. When a user requests a score, the
 website sends the corresponding input to the selected model API. The API returns a result for
 the website to display.
 
-The website does not load or execute model files and does not run the notebooks. Each API loads
-its saved model when that API process starts. The repository includes Random Forest, Lasso
-Regression, Isolation Forest, K-Means, Gradient Boosting, and LightGBM APIs. The app runner starts
-all six.
+The repository also includes a commercial client area on port `5070` and a banker portfolio
+dashboard on port `5080`. The dashboard can use the included transaction data or a bank-provided
+file, then displays portfolio indicators, RFM customer segments, transaction alerts, and per-client
+scores from five of the model APIs. See [the dashboard guide](tableau_bord/README.md) for its
+features, data format, and prototype limitations.
+
+The websites do not load model files or run the notebooks. Each API loads its saved model when
+that API process starts. The repository includes Random Forest, Lasso Regression, Isolation
+Forest, K-Means, Gradient Boosting, and LightGBM APIs.
 
 The notebooks are used to develop and train models. The saved model artifact and its API code
 are what serve predictions while the application is running. Retraining a model requires
@@ -71,10 +77,29 @@ training or replacing any saved model artifact.
 3. Alternatively, open **Run and Debug**, select **Run all scoring services**, and press **F5**.
    The profile is defined in [`.vscode/launch.json`](.vscode/launch.json).
 
-The runner starts services that are not already listening, waits for their health checks, and
-opens `http://127.0.0.1:5000` in the browser. It leaves already-running services alone. Keep the
-runner's terminal open while using the app; press **Ctrl+C** there to stop the services it
-started.
+The runner starts services that are not already listening and waits for their health checks. It
+opens the commercial client area at `http://127.0.0.1:5070` and the banker dashboard at
+`http://127.0.0.1:5080`; the scoring site remains available at `http://127.0.0.1:5000`. It leaves
+already-running services alone. Keep the runner's terminal open while using the apps; press
+**Ctrl+C** there to stop the services it started.
+
+## Banker dashboard
+
+The banker dashboard is a separate Flask application at `http://127.0.0.1:5080`. On first use,
+choose the included example transactions or upload the bank's own transaction file. It accepts
+CSV, TSV, TXT, or JSON files up to 30 MB, previews the columns, and lets the user map them to the
+dashboard fields before using the data.
+
+The dashboard summarizes portfolio activity, assigns customers to five locally calculated RFM
+segments, highlights inactive high-value clients, and displays unusual-transaction alerts from the
+Isolation Forest API. Client profile pages can request scores from the Gradient Boosting, K-Means,
+LightGBM, Lasso, and Random Forest APIs. The first three use projected transaction data where
+available; Lasso and Random Forest include inputs that the advisor may need to adjust. These
+results are a demonstration, not production financial advice or fraud determinations. Imported
+files and local import state are kept in `tableau_bord/imports/` and are excluded from Git.
+
+For details on the dashboard's screens, model inputs, and known limitations, see
+[`tableau_bord/README.md`](tableau_bord/README.md).
 
 ## Run services manually
 
@@ -111,6 +136,17 @@ $env:PORT = "5004"
 ```powershell
 .\venv\Scripts\python.exe .\site\site.py
 ```
+
+The runner also starts the commercial client area and banker dashboard. To run either separately,
+use a terminal from its folder:
+
+```powershell
+..\venv\Scripts\python.exe app.py
+```
+
+Run that command from `espace_client` for the client area (port `5070`) or `tableau_bord` for the
+banker dashboard (port `5080`). For the dashboard's Isolation Forest alerts, start the API on port
+`5003` as well.
 
 Open `http://127.0.0.1:5000`. The APIs use ports `5001` (Random Forest), `5002` (Lasso),
 `5003` (Isolation Forest), `5004` (K-Means), `5005` (Gradient Boosting), and `5006` (LightGBM);
@@ -303,6 +339,14 @@ production deployment.
 │   ├── api.py                  # Random Forest Flask API
 │   ├── modele.joblib           # Trained Random Forest model
 │   └── requirements.txt
+├── tableau_bord/
+│   ├── app.py                  # Banker portfolio dashboard (port 5080)
+│   ├── donnees.py              # Portfolio, RFM segments, alerts, and model scores
+│   ├── importation.py          # Bank transaction file import and normalization
+│   ├── templates/
+│   ├── static/
+│   └── README.md               # Dashboard setup, features, and limitations
+├── espace_client/              # Commercial client area (port 5070)
 ├── site/
 │   ├── apis.json               # API URLs consumed by the website
 │   ├── site.py                 # Website and scoring proxy endpoints
