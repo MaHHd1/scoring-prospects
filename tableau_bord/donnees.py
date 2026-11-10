@@ -69,12 +69,21 @@ MODELES = {
         "nom": "Potentiel de revenu élevé",
         "modele": "Random Forest",
         "auteur": "Mahdi Lakhoua",
-        "question": "Ce client a-t-il un profil de revenu supérieur au seuil du modèle ?",
-        "source": "Âge et profession viennent du compte ; le reste (études, situation familiale, heures travaillées) est au référentiel du modèle.",
+        "question": "Ce client a-t-il un profil de revenu supérieur au seuil du modèle ?",        "source": "Âge et profession viennent du compte ; le reste (études, situation familiale, heures travaillées) est au référentiel du modèle.",
+        "propose": True,
+    },
+    "anomalies": {
+        "port": 5003,
+        "nom": "Opération atypique",
+        "modele": "Isolation Forest",
+        "auteur": "Mehdi Dhib",
+        "question": "Cette opération du compte sort-elle de ses habitudes ?",
+        "source": "Score d'atypicité sur 100, sans étiquette de fraude : la transaction de référence est l'opération la plus déséquilibrée du compte, montant rapporté au solde. Au-delà du seuil, elle mérite un examen.",
         "propose": True,
     },
 }
-ORDRE_MODELES = ["defaut", "segmentation", "souscription", "actifs", "revenu"]
+
+ORDRE_MODELES = ["defaut", "segmentation", "souscription", "actifs", "revenu", "anomalies"]
 
 _JOURS_PAR_MOIS = 30.44
 
@@ -351,6 +360,30 @@ def _arrondi(valeur: float) -> int:
     return int(round(valeur))
 
 
+def operation_a_examiner(compte: str):
+    """L'opération du compte la plus déséquilibrée (montant / solde), candidat à l'examen."""
+    transactions = _transactions()
+    du_compte = transactions[transactions["AccountID"] == compte]
+    if du_compte.empty:
+        return None
+    ratio = du_compte["TransactionAmount"] / du_compte["AccountBalance"].clip(lower=1)
+    return du_compte.loc[ratio.idxmax()]
+
+
+def detail_modele(cle: str, compte: str) -> dict | None:
+    """Transaction de référence affichée sous le score d'atypicité."""
+    if cle != "anomalies":
+        return None
+    operation = operation_a_examiner(compte)
+    if operation is None:
+        return None
+    return {
+        "date": operation["TransactionDate"].strftime("%d/%m/%Y"),
+        "montant": float(operation["TransactionAmount"]),
+        "canal": operation["Channel"],
+    }
+
+
 def valeurs_proposees(cle: str, compte: str) -> dict:
     """Valeurs placées dans le formulaire du modèle avant tout ajustement."""
     fiche = _client(compte)
@@ -415,6 +448,21 @@ def valeurs_proposees(cle: str, compte: str) -> dict:
             "occupation": professions.get(fiche["occupation"], "Unknown"),
         }
 
+    if cle == "anomalies":
+        operation = operation_a_examiner(compte)
+        if operation is None:
+            return {}
+        return {
+            "TransactionAmount": float(operation["TransactionAmount"]),
+            "CustomerAge": _entier(operation, "CustomerAge", fiche["age"]),
+            "TransactionDuration": _entier(operation, "TransactionDuration", 60),
+            "LoginAttempts": _entier(operation, "LoginAttempts", 1),
+            "AccountBalance": float(operation["AccountBalance"]),
+            "TransactionType": operation["TransactionType"],
+            "Channel": operation["Channel"],
+            "CustomerOccupation": operation["CustomerOccupation"],
+        }
+
     return {}
 
 
@@ -474,6 +522,7 @@ def appeler_modele(cle: str, valeurs: dict) -> dict | None:
 # Verdicts écrits pour le conseiller, quand l'API ne renvoie qu'un libellé de cible.
 VERDICTS = {
     "souscription": ("À proposer lors du prochain contact", "Peu réceptif pour l'instant"),
+    "anomalies": ("Transaction atypique : à examiner", "Transaction habituelle"),
     "revenu": ("Profil au-dessus du seuil du modèle", "Sous le seuil du modèle"),
     "actifs": ("Valeur estimée par régression Lasso", "Valeur estimée par régression Lasso"),
 }
@@ -517,7 +566,7 @@ def _presentation(cle: str, brut: dict) -> dict:
 
 
 def scores_client(compte: str, remplacements: dict | None = None) -> list[dict]:
-    """Exécute les cinq modèles sur un compte et renvoie de quoi les afficher."""
+    """Exécute les six modèles sur un compte et renvoie de quoi les afficher."""
     remplacements = remplacements or {}
     modeles = []
     for cle in ORDRE_MODELES:
@@ -546,6 +595,7 @@ def scores_client(compte: str, remplacements: dict | None = None) -> list[dict]:
             for champ in champs
         ],
                 "valeurs": valeurs,
+                "detail": detail_modele(cle, compte),
                 "resultat": _presentation(cle, brut) if brut else None,
             }
         )

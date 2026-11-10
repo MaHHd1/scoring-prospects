@@ -36,7 +36,7 @@
 <section class="bloc">
   <div class="bloc-entete">
     <h2>Lecture des modèles</h2>
-    <p>Cinq modèles du projet appliqués à ce compte. Les entrées sont visibles et modifiables sous chaque score ; « Réinitialiser » y remet les valeurs proposées pour ce client.</p>
+    <p>Six modèles du projet appliqués à ce compte. Les entrées sont visibles et modifiables sous chaque score ; « Réinitialiser » y remet les valeurs proposées pour ce client.</p>
   </div>
 
   <div class="grille-modeles">
@@ -53,6 +53,12 @@
         </div>
 
         <p class="modele-question">{{ modele.question }}</p>
+
+        {% if modele.detail %}
+          <p class="modele-detail">
+            Opération de référence : {{ modele.detail.date }} · {{ modele.detail.montant | tnd }} · canal {{ modele.detail.canal }}
+          </p>
+        {% endif %}
 
         {% if modele.resultat %}
           <div class="modele-resultat">

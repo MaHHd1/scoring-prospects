@@ -593,6 +593,13 @@ h2 {
   font-size: 12.5px;
 }
 
+.modele-detail {
+  margin-top: 2px;
+  color: var(--encre-douce);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
 .modele-resultat {
   margin: 10px 0 8px;
 }

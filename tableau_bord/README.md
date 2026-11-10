@@ -66,7 +66,7 @@ d'objets. Les fichiers déposés et l'état local restent dans `imports/`, exclu
 Chaque segment a sa page (`/segment/<cle>`) avec ses indicateurs et la liste de ses clients,
 triés par volume, notes R, F et M visibles. Un clic sur un compte ouvre sa fiche.
 
-## Fiche client : les cinq modèles du projet
+## Fiche client : les six modèles du projet
 
 `/client/<compte>` (accessible depuis un segment ou depuis les listes de la vue d'ensemble) applique
 les modèles des autres membres au compte, avec leurs entrées visibles et modifiables.
@@ -78,6 +78,11 @@ les modèles des autres membres au compte, avec leurs entrées visibles et modif
 | Propension à souscrire | 5006 | LightGBM | Ranim Boujlel | Souscription d'un produit d'épargne | Âge, métier et solde réels ; situation et logement à confirmer |
 | Actifs bancaires estimés | 5002 | Lasso | Souha Mabrouk | Valeur d'actifs bancaires | Simulateur : revenus et patrimoine ne sont pas dans le jeu de données |
 | Potentiel de revenu élevé | 5001 | Random Forest | Mahdi Lakhoua | Revenu supérieur au seuil du modèle | Âge et profession réels ; études et situation au référentiel |
+| Opération atypique | 5003 | Isolation Forest | Mehdi Dhib | Cette opération sort-elle des habitudes du compte | Opération de référence = la plus déséquilibrée du compte (montant / solde), avec ses huit champs réels |
+
+La carte « Opération atypique » affiche la date, le montant et le canal de la transaction notée
+sous la question, pour que le conseiller sache de quelle opération il parle. Son score est un score
+d'atypicité sur 100 (pas une probabilité de fraude) : « à examiner » au-delà du seuil du modèle.
 
 Chaque carte affiche le score, le verdict en clair, le seuil du modèle, et un bloc **Ajuster les
 entrées** qui détaille les champs réellement envoyés à l'API. Le bouton « Recalculer » renvoie le
@@ -136,6 +141,9 @@ L'action recommandée par segment est écrite en clair dans le code (`SEGMENTS` 
   inconnue → 404, `/demarrer` sans barre latérale ; « données d'exemple » puis un import testé de
   bout en bout donnent 200 sur les mêmes adresses.
 - Reset : `LIMIT_BAL` proposé 8 430 → recalculé 999 999 → 8 430 après « Réinitialiser ».
+- Fiche à six cartes : `/client/AC00020` renvoie le score Isolation Forest de l'opération de
+  référence (57,1 % pour 603 TND au canal Branch), qui monte à 69,9 % avec 90 000 TND sur un solde
+  de 900, puis revient à 57,1 % et 603,23 après « Réinitialiser » ; les cinq autres scores ne bougent pas.
 - Import testé de bout en bout avec `exemple_banque.csv` (séparateur `;`, dates `jj/mm/aaaa`, montants
   à virgule, en-têtes accentués) : 8 colonnes associées automatiquement, 400 lignes et 40 comptes
   repris, tableau de bord et fiche client affichés ; mapping incomplet → message « Associez aussi… » ;
